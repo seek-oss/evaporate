@@ -1,0 +1,30 @@
+test-stack1:
+  template-path: "template.json"
+  parameters:
+    123412341234:
+      param1: value
+
+test-stack2:
+  template-path: "template.json"
+  parameters:
+    123412341234:
+      param1: value
+
+test-stack3:
+  template-path: "template.json"
+  parameters:
+    123412341234:
+      param1: ${stack.test-stack1.output.output1}
+
+test-stack4:
+  template-path: "template.json"
+  parameters:
+    123412341234:
+      param1: ${stack.test-stack2.output.output1}
+
+test-stack5:
+  template-path: "template.json"
+  parameters:
+    123412341234:
+      param1: ${stack.test-stack3.output.output1}
+      param2: ${stack.test-stack4.output.output1}

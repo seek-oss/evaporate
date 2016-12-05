@@ -1,0 +1,117 @@
+name:                evaporate
+version:             0.4.0.0
+synopsis:            A simple CloudFormation Stack deployment tool
+description:         Please see README.md
+homepage:            https://github.com/SEEK-Jobs/evaporate
+author:              SEEK Ltd.
+maintainer:          SEEK Ltd.
+copyright:           2016 SEEK
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Configuration
+                     , ExternalValues
+                     , Hash
+                     , Evaporate
+                     , Logging
+                     , S3
+                     , Stack
+                     , StackDependency
+                     , StackParameters
+                     , STS
+                     , Types
+                     , Zip
+  other-modules:       Paths_evaporate
+  build-depends:       base >= 4.7 && < 5
+                     , aeson
+                     , amazonka
+                     , amazonka-cloudformation
+                     , amazonka-core
+                     , amazonka-s3
+                     , amazonka-sts
+                     , bytestring
+                     , containers
+                     , cryptonite
+                     , directory
+                     , either
+                     , errors
+                     , extra
+                     , fgl
+                     , filepath
+                     , hashable
+                     , hslogger
+                     , http-types
+                     , lens
+                     , mtl
+                     , nicify-lib
+                     , optparse-applicative
+                     , parsers
+                     , resourcet
+                     , safe-exceptions
+                     , text
+                     , transformers
+                     , trifecta
+                     , unordered-containers
+                     , vector
+                     , yaml
+                     , zip-archive
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+                     , ScopedTypeVariables
+                     , RecordWildCards
+                     , TupleSections
+                     , FlexibleContexts
+
+executable evaporate
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , evaporate
+  default-language:    Haskell2010
+
+test-suite evaporate-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  other-modules:       ExternalValuesSpec
+                     , HashSpec
+                     , LoggingSpec
+                     , StackDependencySpec
+                     , StackParametersSpec
+                     , ZipSpec
+  build-depends:       base
+                     , amazonka
+                     , amazonka-cloudformation
+                     , amazonka-core
+                     , amazonka-s3
+                     , either
+                     , exceptions
+                     , fgl
+                     , hspec
+                     , hspec-core
+                     , hspec-expectations-pretty-diff
+                     , lens
+                     , evaporate
+                     , mtl
+                     , parsers
+                     , resourcet
+                     , text
+                     , trifecta
+                     , unordered-containers
+                     , yaml
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  default-extensions:  OverloadedLists
+                     , OverloadedStrings
+                     , ScopedTypeVariables
+                     , RecordWildCards
+                     , TupleSections
+
+source-repository head
+  type:                git
+  location:            https://github.com/SEEK-Jobs/evaporate

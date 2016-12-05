@@ -1,0 +1,31 @@
+# When parsed this file will throw a parse exception as the parser
+# will not accept empty string as alternate paths for files (line 20)
+
+Stack1:
+  template-path: "template.json"
+  tags:
+    tag1: "value1"
+    tag2: "value2"
+  parameters:
+    env1:
+      aws-external-id: "abcde12345"
+    env2:
+      aws-external-id: "lmnop98765"
+    env3:
+      aws-external-id: "pqrst45678"
+  s3upload:
+  - bucket-name: someBucket
+    hash: true
+    paths:
+      evaporate.yaml: ""
+
+Stack2:
+  template-path: "template2.json"
+  tags: {}
+  parameters:
+    env1:
+      aws-external-id: "abcde12345"
+    env2:
+      aws-external-id: "lmnop98765"
+    env3:
+      aws-external-id: "pqrst45678"

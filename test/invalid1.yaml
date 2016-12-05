@@ -1,0 +1,32 @@
+# The string "invalid" implies the key "Stack1" has value "invalid" but the
+# indentation of "template-path" and "parameters" implies the key "Stack1" has
+# a value of the inner dictionary. This conflict causes the parser to fail.
+
+Stack1: "invalid"
+  template-path: "template.json"
+  tags:
+    tag1: "value1"
+    tag2: "value2"
+  parameters:
+    env1:
+      aws-external-id: "abcde12345"
+    env2:
+      aws-external-id: "lmnop98765"
+    env3:
+      aws-external-id: "pqrst45678"
+  s3upload:
+  - bucket-name: someBucket
+    hash: true
+    paths:
+      - evaporate.yaml
+
+Stack2:
+  template-path: "template2.json"
+  tags: {}
+  parameters:
+    env1:
+      aws-external-id: "abcde12345"
+    env2:
+      aws-external-id: "lmnop98765"
+    env3:
+      aws-external-id: "pqrst45678"

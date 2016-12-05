@@ -1,0 +1,105 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Example stack for testing the evaporate tool",
+  "Resources": {
+    "EvaporateBucket": {
+      "Type": "AWS::S3::Bucket"
+    },
+    "SampleFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "",
+              [
+                "exports.handler = function(event, context, callback) {",
+                "   console.log(event);",
+                "   console.log(", { "Ref": "LogMessage" }, ");",
+                "   callback(null, 'Sample function called');",
+                "};"
+              ]
+            ]
+          }
+        },
+        "Runtime": "nodejs"
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "EvaporateSample",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:*"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "LogMessage": {
+      "Type": "String",
+      "Description": "Message to log in the lambda function."
+    },
+    "FunctionArn": {
+      "Type": "String",
+      "Description": "Arn of another stack's lambda function.",
+      "Default": ""
+    },
+    "FunctionID": {
+      "Type": "String",
+      "Description": "ID of another stack's lambda function.",
+      "Default": ""
+    }
+  },
+  "Outputs": {
+    "OutputArn": {
+      "Description": "The arn of the lambda function",
+      "Value": { "Fn::GetAtt" : [ "SampleFunction", "Arn" ]}
+    },
+    "OutputID": {
+      "Description": "The LamdaFunction ID",
+      "Value": { "Ref" : "SampleFunction" }
+    },
+    "BucketName": {
+      "Description": "The name of the bucket",
+      "Value": { "Ref" : "EvaporateBucket" }
+    }
+  }
+}

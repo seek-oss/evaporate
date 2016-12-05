@@ -1,0 +1,50 @@
+evaporate-example-stack1: # Stack name
+  template-path: stack-template1.json
+  tags:
+    Project: "Death Star"
+    Owner: "tarkin@theempire.net"
+    Stream: "Imperial Fleet"
+  parameters:
+    123456781111: # AWS Account ID
+      LogMessage: "Log message"
+    111122223333: # AWS Account ID
+      LogMessage: "Log message"
+
+evaporate-example-stack2: # Stack name
+  s3upload:
+  - bucket-name: ${stack.evaporate-example-stack1.output.BucketName}
+    hash: true
+    zip: true
+    paths:
+      - stack-template.json
+      - evaporate.yaml
+      - someFolder
+  - bucket-name: ${stack.evaporate-example-stack1.output.BucketName}
+    hash: true
+    paths:
+      stack-template.json: "folder1/stack-template.json"
+      evaporate.yaml: "folder1/evaporate.yaml"
+      someFolder: "folder1/someFolder"
+  - bucket-name: ${stack.evaporate-example-stack1.output.BucketName}
+    # hash and zip default to false
+    # hash: false
+    # zip: false
+    paths:
+      stack-template.json: "folder1/stack-template.json"
+      evaporate.yaml: "folder1/evaporate.yaml"
+      someFolder: "folder1/someFolder"
+  template-path: stack-template2.json
+  capabilities:
+    - CAPABILITY_IAM
+  tags:
+    Project: "Death Star"
+    Owner: "tarkin@theempire.net"
+    Stream: "Imperial Fleet"
+  parameters:
+    123456781111: # AWS Account ID
+      LogMessage: "${hash.evaporate.yaml}"
+      FunctionArn: "${stack.evaporate-example-stack1.output.OutputArn}"
+      FunctionID: "${stack.evaporate-example-stack1.output.OutputID}"
+      EnvParam: "${env.SOME_ENV}"
+    111122223333: # AWS Account ID
+      LogMessage: "Hello from production."

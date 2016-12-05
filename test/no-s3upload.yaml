@@ -1,0 +1,11 @@
+Stack1:
+  template-path: "template.json"
+  tags:
+    SomeTag: "someValue"
+  parameters:
+    env1:
+      aws-external-id: "abcde12345"
+    env2:
+      aws-external-id: "lmnop98765"
+    env3:
+      aws-external-id: "pqrst45678"

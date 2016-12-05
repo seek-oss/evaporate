@@ -1,0 +1,24 @@
+Stack1:
+  template-path: "template.json"
+  tags:
+    tag1: "value1"
+    tag2: "value2"
+  parameters:
+    env1:
+      aws-external-id: "abcde12345"
+    env2:
+      aws-external-id: "${env.MY_ENV_VAR}"
+
+Stack2:
+  s3upload:
+  - bucket-name: "bucket1"
+    zip: true
+    paths:
+      evaporate.yaml: "folder1/evaporate.yaml"
+  template-path: "template2.json"
+  tags: {}
+  parameters:
+    env1:
+      aws-external-id: "${hash.evaporate.yaml}"
+    env2:
+      aws-external-id: "${stack.myStack.output.myOutput}"

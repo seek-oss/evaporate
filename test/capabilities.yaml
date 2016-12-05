@@ -1,0 +1,5 @@
+a-stack-with-capability-iam:
+  template-path: "template.json"
+  capabilities:
+    - CAPABILITY_IAM
+  parameters: {}
