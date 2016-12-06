@@ -23,6 +23,7 @@ import           System.Directory ( listDirectory
                                   , doesFileExist
                                   )
 import           System.FilePath (joinPath)
+import qualified System.FilePath.Posix as Posix
 
 import           StackParameters (paths, BucketFiles(..))
 import           Types ( Paths
@@ -43,7 +44,7 @@ inlineHashes hashedPaths bucketFiles@BucketFiles{..} =
     prependWithHash :: MonadThrow m => Paths -> Text -> Text -> m Text
     prependWithHash hashes path altPath =
       maybe (throwHashNotFound path)
-            (pure . pack . joinPath . (: [unpack altPath]) . unpack)
+            (pure . pack . Posix.joinPath . (: [unpack altPath]) . unpack)
             (HashMap.lookup path hashes)
       where
         throwHashNotFound filePath = throwM $ HashNotFound filePath
