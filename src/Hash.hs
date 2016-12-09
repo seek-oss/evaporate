@@ -2,10 +2,17 @@
 module Hash( inlineHashes
            , hashBucketFiles
            , createHash
+           , createHash'
            , FileOrFolderDoesNotExist(..)
            , HashNotFound(..)
            ) where
 
+import           Conduit ( sourceFile
+                         , runConduitRes
+                         , sourceDirectoryDeep
+                         , awaitForever
+                         , MonadBaseControl
+                         )
 import           Control.Exception.Safe (throwM, MonadThrow)
 import           Control.Lens ((&), (.~))
 import           Control.Monad.IO.Class (MonadIO(..))
@@ -15,7 +22,9 @@ import           Crypto.Hash ( hashInitWith
                              , Digest
                              )
 import           Crypto.Hash.Algorithms (SHA1(..))
+import           Crypto.Hash.Conduit (sinkHash)
 import qualified Data.ByteString as BS
+import           Data.Conduit ((.|))
 import qualified Data.HashMap.Lazy as HashMap
 import           Data.Text (pack, unpack, Text)
 import           System.Directory ( listDirectory
@@ -72,3 +81,16 @@ createHash path = do
   byteStringFiles <- traverse (liftIO . BS.readFile) files
   let context = hashUpdates (hashInitWith SHA1) byteStringFiles
   return $ hashFinalize context
+
+createHash' :: (MonadThrow m, MonadBaseControl IO m, MonadIO m)
+                    => FilePath
+                    -> m (Digest SHA1)
+createHash' path =
+  (liftIO . doesDirectoryExist) path >>= \case
+    True -> runConduitRes $
+            sourceDirectoryDeep True path
+         .| awaitForever sourceFile
+         .| sinkHash
+    False -> (liftIO . doesFileExist) path >>= \case
+      True -> runConduitRes $ sourceFile path .| sinkHash
+      False -> throwM $ FileOrFolderDoesNotExist (pack path)
