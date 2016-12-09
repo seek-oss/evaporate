@@ -1,10 +1,16 @@
 {-# LANGUAGE LambdaCase #-}
-module S3(uploadBucketFiles) where
+module S3(uploadFileOrFolder, getFiles, replaceRootDirectoryWithAltPath) where
 
+import           Conduit ( runConduitRes
+                         , sourceDirectoryDeep
+                         , sinkList
+                         , mapC
+                         )
 import           Control.Exception.Safe (throwM)
 import           Control.Monad (void)
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.AWS (send, AWSConstraint)
+import           Data.Conduit ((.|))
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Monoid ((<>))
@@ -17,7 +23,7 @@ import           Network.AWS.S3.Types (BucketName(..))
 import           System.Directory ( listDirectory
                                   , doesDirectoryExist
                                   , doesFileExist)
-import           System.FilePath (joinPath)
+import           System.FilePath (splitPath, joinPath, (</>), isRelative)
 
 import           Logging (logEvaporate)
 import           StackParameters (BucketFiles(..))
@@ -59,6 +65,21 @@ uploadFileToS3 bucketName@(BucketName name) filePath altPath = do
 uploadFolderToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
 uploadFolderToS3 bucketName folderPath altPath = do
   files <- liftIO . listDirectory $ unpack folderPath
+  -- files <- runConduitRes $ sourceDirectoryDeep True (unpack folderPath) .| sinkList
   let folderPaths = (pack . joinPath . (\x -> [unpack folderPath, x])) <$> files
   let altPaths = (pack . joinPath . (\x -> [unpack altPath, x])) <$> files
   traverse_ (uncurry (S3.uploadFileToS3 bucketName)) $ zip folderPaths altPaths
+
+getFiles :: FilePath -> FilePath -> IO [FilePath]
+getFiles path altPath = runConduitRes $
+     sourceDirectoryDeep True path
+  .| mapC (`replaceRootDirectoryWithAltPath` altPath)
+  .| sinkList
+
+replaceRootDirectoryWithAltPath :: FilePath -> FilePath -> FilePath
+replaceRootDirectoryWithAltPath path altPath =
+  if isRelative path
+    then
+      joinPath $ (altPath <> "/") : (tail . splitPath $ path)
+    else
+      joinPath $ (altPath <> "/") : (drop 2 . splitPath $ path)

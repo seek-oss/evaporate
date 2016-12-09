@@ -66,3 +66,8 @@ spec = describe "HashSpec" $ do
     it "throws if the file or folder doesn't exist" $
       createHash "file1.txt" `shouldThrow`
         (== FileOrFolderDoesNotExist "file1.txt")
+
+    it "can hash a single file" $
+      void $ createHash "SOMEPATH"
+
+    it "can the contents" $ undefined

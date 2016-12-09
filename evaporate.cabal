@@ -1,5 +1,5 @@
 name:                evaporate
-version:             0.5.0.0
+version:             0.5.1.0
 synopsis:            A simple CloudFormation Stack deployment tool
 description:         Please see README.md
 homepage:            https://github.com/SEEK-Jobs/evaporate
@@ -34,8 +34,11 @@ library
                      , amazonka-s3
                      , amazonka-sts
                      , bytestring
+                     , conduit
+                     , conduit-combinators
                      , containers
                      , cryptonite
+                     , cryptonite-conduit
                      , directory
                      , either
                      , errors
@@ -81,6 +84,7 @@ test-suite evaporate-test
   other-modules:       ExternalValuesSpec
                      , HashSpec
                      , LoggingSpec
+                     , S3Spec
                      , StackDependencySpec
                      , StackParametersSpec
                      , ZipSpec
