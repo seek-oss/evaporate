@@ -3,6 +3,7 @@ module LoggingSpec (spec, main) where
 import Control.Monad.Except (runExceptT)
 import Data.Either.Combinators (fromRight')
 import Data.Monoid ((<>))
+import Network.AWS.Types (Region(..))
 import Test.Hspec ( describe
                   , context
                   , shouldBe
@@ -36,26 +37,27 @@ spec = describe "LoggingSpec" $ do
       stackParams <- runExceptT . getStackParameters $ "test/valid.yaml"
       let descriptions = fromRight' stackParams
       let accountID = "478156153062"
-      let logParams = LogParameters Create descriptions accountID
+      let logParams = LogParameters Create descriptions accountID Sydney
       let logMessage = logMain logParams
       logMessage `shouldBe`
            "\nCommand being executed: "
         <> "Create"
         <> "\nAWS Account ID: "
         <> "478156153062"
+        <> "\nRegion: ap-southeast-2"
         <> "\nStack(s) being operated on:"
         <> "\n    Stack1"
         <> "\n    Stack2"
 
     it "can generate a general log message" $ do
       let accountID = "478156153062"
-      let logMessage = logGeneral Create accountID
+      let logMessage = logGeneral Create accountID Sydney
       logMessage `shouldBe`
            "\nCommand being executed: "
         <> "Create"
         <> "\nAWS Account ID: "
         <> "478156153062"
-        <> "\nStack(s) being operated on:"
+        <> "\nRegion: ap-southeast-2"
 
     it "can generate a stack name log message" $ do
       stackParams <- runExceptT . getStackParameters $ "test/valid.yaml"
