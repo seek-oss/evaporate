@@ -9,6 +9,7 @@ import           Data.Monoid ((<>))
 import           Data.Text (Text, unpack, pack)
 import           Data.Text.Encoding (encodeUtf8)
 import           Network.AWS.Data.Text (toText)
+import           Network.AWS.S3.Types (BucketName(..))
 import           Network.AWS.Types (Logger, Region, LogLevel(..))
 import           System.Log.Logger (infoM)
 import           System.IO (hSetBinaryMode, hSetBuffering, Handle, BufferMode(..))
@@ -70,6 +71,12 @@ logExecution command StackName{..} =
   <> " on "
   <> getStackName
   <> "...\n"
+
+logFileUpload :: Text -> Text -> BucketName -> Text
+logFileUpload filePath altFilePath (BucketName bucketName) =
+     "Uploading " <> filePath
+  <> " as "       <> altFilePath
+  <> " to "       <> bucketName
 
 -- Based off the amazonka logger
 customLogger :: MonadIO m => LogLevel -> Handle -> Filters -> m Logger

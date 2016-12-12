@@ -3,6 +3,7 @@ module LoggingSpec (spec, main) where
 import Control.Monad.Except (runExceptT)
 import Data.Either.Combinators (fromRight')
 import Data.Monoid ((<>))
+import Network.AWS.S3.Types (BucketName(..))
 import Network.AWS.Types (Region(..))
 import Test.Hspec ( describe
                   , context
@@ -19,6 +20,7 @@ import Logging ( logMain
                , logStackName
                , logExecution
                , logStackOutputs
+               , logFileUpload
                , filterBuilderBy
                , LogParameters(..)
                )
@@ -86,6 +88,15 @@ spec = describe "LoggingSpec" $ do
            "Stack outputs:\n"
         <> "Stack name: myStack, Output name: myOutput1, Output value: OutputValue1\n"
         <> "Stack name: myStack, Output name: myOutput2, Output value: OutputValue2\n"
+
+    it "can generate a file upload log message" $ do
+      let filePath = "myFolder/myFile.txt"
+      let myAltPath = "folder/myFile.txt"
+      let bucketName = BucketName "myBucket"
+      logFileUpload filePath myAltPath bucketName `shouldBe`
+           "Uploading myFolder/myFile.txt"
+        <> " as folder/myFile.txt"
+        <> " to myBucket"
 
     it "logs properly when there are no stack outputs" $ do
       let stackOutputs = Nothing
