@@ -11,7 +11,6 @@ import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.AWS (send, AWSConstraint)
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
-import           Data.Monoid ((<>))
 import           Data.Text (pack, unpack, Text)
 import           Network.AWS ( chunkedFile
                              , defaultChunkSize
@@ -23,7 +22,7 @@ import           System.Directory ( doesDirectoryExist
                                   )
 import           System.FilePath.Posix ((</>), addTrailingPathSeparator)
 
-import           Logging (logEvaporate)
+import           Logging (logEvaporate, logFileUpload)
 import           StackParameters (BucketFiles(..))
 import           Types (FileOrFolderDoesNotExist(..))
 import           Utils (getFilesFromFolder)
@@ -51,14 +50,11 @@ uploadFileOrFolder (bucketName, path, altPath) =
       False -> throwM $ FileOrFolderDoesNotExist path
 
 uploadFileToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
-uploadFileToS3 bucketName@(BucketName name) filePath altFilePath = do
+uploadFileToS3 bucketName filePath altFilePath = do
   let key = S3.ObjectKey altFilePath
   body <- chunkedFile defaultChunkSize (unpack filePath)
   let req = S3.putObject bucketName key body
-  liftIO . logEvaporate $
-       "Uploading " <> filePath
-    <> " as "       <> altFilePath
-    <> " to "       <> name
+  liftIO . logEvaporate $ logFileUpload filePath altFilePath bucketName
   void . send $ req
 
 uploadFolderToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
