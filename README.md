@@ -143,13 +143,23 @@ as well as the files/folders to be uploaded.
 s3upload:
 - bucket-name: bucket1
   paths:
-    folder/file.txt: "folder/anotherFolder/file.txt"
+    folder/file.txt: folder/anotherFolder/file.txt
 ```
 
-The key specifies the path to the file and the value is the path the file will
-appear at in the bucket. This is useful for altering the structure of files in
-the bucket without having to mirror that structure locally. The value may also
-be left empty:
+If the key is a file, then the value will be the path the file will appear at in
+the bucket. If the key is a folder, then the value will be the path to that
+folder in the bucket. For example:
+
+```
+paths:
+  folder: myFolder
+```
+
+This would upload all the files within `folder` but they would be under the
+`myFolder` folder in the bucket.
+
+This is useful for altering the structure of files in the bucket without having
+to mirror that structure locally. The value may also be left empty:
 
 ```
 paths:
@@ -261,16 +271,16 @@ sourceFile2.py.zip
 sourceFolder2.zip
 ```
 
-*NB:* When zipping a folder, the root of the archive will contain the contents
-of that folder, not the folder by itself.
+Both the `hash` and `zip` flag can be used together. This will yield the same
+result as having just the `zip` flag, except all file paths will be
+prefixed with the hash of their contents.
+
+*NB:* When zipping a folder, the structure of the folder is flattened since AWS
+Lambda can only detect source files in the root of an archive.
 
 *NB:* The `.zip` suffix will be added to the alternate file path so there is no
 need to explicitly name the alternate path `path/to/file.zip` as this will
 result in a file called `file.zip.zip`.
-
-Both the `hash` and `zip` flag can be used together. This will yield the same
-result as having just the `zip` flag, except all file paths will be
-prefixed with the hash of their contents.
 
 #### Capabilities
 
