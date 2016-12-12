@@ -5,15 +5,10 @@ module S3( uploadFileOrFolder
          , makeAltPath
          ) where
 
-import           Conduit ( runConduitRes
-                         , sourceDirectoryDeep
-                         , sinkList
-                         )
 import           Control.Exception.Safe (throwM)
 import           Control.Monad (void)
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.AWS (send, AWSConstraint)
-import           Data.Conduit ((.|))
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Monoid ((<>))
@@ -31,6 +26,7 @@ import           System.FilePath.Posix ((</>), addTrailingPathSeparator)
 import           Logging (logEvaporate)
 import           StackParameters (BucketFiles(..))
 import           Types (FileOrFolderDoesNotExist(..))
+import           Utils (getFilesFromFolder)
 
 uploadBucketFiles :: AWSConstraint r m => BucketFiles -> m ()
 uploadBucketFiles bucketFiles =
@@ -70,11 +66,6 @@ uploadFolderToS3 bucketName folderPath altFolderPath = do
   folderFiles <- liftIO . getFilesFromFolder $ unpack folderPath
   let altFolderFiles = makeAltPath (unpack altFolderPath) (unpack folderPath) <$> folderFiles
   traverse_ (uncurry (S3.uploadFileToS3 bucketName)) $ zip (pack <$> folderFiles) altFolderFiles
-
-getFilesFromFolder :: FilePath -> IO [FilePath]
-getFilesFromFolder folderPath = runConduitRes $
-  sourceDirectoryDeep True folderPath
-  .| sinkList
 
 makeAltPath :: FilePath -> FilePath -> FilePath -> Text
 makeAltPath altFolderPath folderPath filePath = do
