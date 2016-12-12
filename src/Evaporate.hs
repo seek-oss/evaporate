@@ -19,6 +19,7 @@ import           Control.Monad.Trans.AWS ( newEnv
                                          , AWSConstraint
                                          , Credentials(Discover)
                                          )
+import           Control.Monad.Trans.Resource (MonadBaseControl)
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Text (pack, Text)
@@ -100,7 +101,7 @@ execute Options{..} = do
     else
       void $ processStacks command awsAccountID orderedStackDescriptions stackNameOption
 
-processStacks :: forall m. (AWSConstraint Context m)
+processStacks :: forall m. (AWSConstraint Context m, MonadBaseControl IO m)
               => Command
               -> AWSAccountID
               -> [StackDescription]

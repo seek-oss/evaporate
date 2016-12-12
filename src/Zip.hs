@@ -2,6 +2,7 @@
 module Zip( inlineZips
           , writeZips
           , writeZip
+          , writeFolderToZip
           ) where
 
 import           Codec.Archive.Zip ( addFilesToArchive
@@ -9,12 +10,14 @@ import           Codec.Archive.Zip ( addFilesToArchive
                                    , fromArchive
                                    , ZipOption(..)
                                    )
+import           Conduit (runConduitRes, sourceDirectoryDeep, sinkList)
 import           Control.Exception.Safe (catch, throwM, MonadThrow)
 import           Control.Monad (when, void)
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.Resource (register, MonadResource(..))
 import           Control.Lens ((&), (.~))
 import qualified Data.ByteString.Lazy as BS
+import           Data.Conduit ((.|))
 import qualified Data.HashMap.Lazy as HashMap
 import           Data.Monoid ((<>))
 import           Data.Text (pack, unpack, Text)
@@ -23,11 +26,9 @@ import           Data.Tuple.Extra ((***))
 import           System.Directory ( removeFile
                                   , doesDirectoryExist
                                   , doesFileExist
-                                  , listDirectory
                                   )
 import           System.FilePath ( takeFileName
                                  , dropTrailingPathSeparator
-                                 , joinPath
                                  )
 import           System.IO.Error (isDoesNotExistError)
 
@@ -81,9 +82,8 @@ writeFileToZip path nameOfZip = do
 
 writeFolderToZip :: FilePath -> FilePath -> IO ()
 writeFolderToZip path nameOfZip = do
-  directoryFiles <- (fmap . fmap) (\x -> [path, x]) (listDirectory path)
-  let relativeFilePaths = fmap joinPath directoryFiles
+  directoryFiles <- runConduitRes $ sourceDirectoryDeep True path .| sinkList
   archive <- addFilesToArchive
-    [OptRecursive, OptLocation "." False] emptyArchive relativeFilePaths
+    [OptRecursive, OptLocation "." False] emptyArchive directoryFiles
   logEvaporate $ "Zipping " <> pack path
   BS.writeFile nameOfZip (fromArchive archive)

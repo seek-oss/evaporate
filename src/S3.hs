@@ -1,10 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
-module S3(uploadFileOrFolder, getFiles, replaceRootDirectoryWithAltPath) where
+module S3( uploadFileOrFolder
+         , getFilesFromFolder
+         , uploadBucketFiles
+         , makeAltPath
+         ) where
 
 import           Conduit ( runConduitRes
                          , sourceDirectoryDeep
                          , sinkList
-                         , mapC
                          )
 import           Control.Exception.Safe (throwM)
 import           Control.Monad (void)
@@ -20,10 +23,10 @@ import           Network.AWS ( chunkedFile
                              )
 import qualified Network.AWS.S3 as S3
 import           Network.AWS.S3.Types (BucketName(..))
-import           System.Directory ( listDirectory
-                                  , doesDirectoryExist
-                                  , doesFileExist)
-import           System.FilePath (splitPath, joinPath, (</>), isRelative)
+import           System.Directory ( doesDirectoryExist
+                                  , doesFileExist
+                                  )
+import           System.FilePath.Posix ((</>), addTrailingPathSeparator)
 
 import           Logging (logEvaporate)
 import           StackParameters (BucketFiles(..))
@@ -52,34 +55,29 @@ uploadFileOrFolder (bucketName, path, altPath) =
       False -> throwM $ FileOrFolderDoesNotExist path
 
 uploadFileToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
-uploadFileToS3 bucketName@(BucketName name) filePath altPath = do
-  let key = S3.ObjectKey altPath
+uploadFileToS3 bucketName@(BucketName name) filePath altFilePath = do
+  let key = S3.ObjectKey altFilePath
   body <- chunkedFile defaultChunkSize (unpack filePath)
   let req = S3.putObject bucketName key body
   liftIO . logEvaporate $
        "Uploading " <> filePath
-    <> " as "       <> altPath
+    <> " as "       <> altFilePath
     <> " to "       <> name
   void . send $ req
 
 uploadFolderToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
-uploadFolderToS3 bucketName folderPath altPath = do
-  files <- liftIO . listDirectory $ unpack folderPath
-  -- files <- runConduitRes $ sourceDirectoryDeep True (unpack folderPath) .| sinkList
-  let folderPaths = (pack . joinPath . (\x -> [unpack folderPath, x])) <$> files
-  let altPaths = (pack . joinPath . (\x -> [unpack altPath, x])) <$> files
-  traverse_ (uncurry (S3.uploadFileToS3 bucketName)) $ zip folderPaths altPaths
+uploadFolderToS3 bucketName folderPath altFolderPath = do
+  folderFiles <- liftIO . getFilesFromFolder $ unpack folderPath
+  let altFolderFiles = makeAltPath (unpack altFolderPath) (unpack folderPath) <$> folderFiles
+  traverse_ (uncurry (S3.uploadFileToS3 bucketName)) $ zip (pack <$> folderFiles) altFolderFiles
 
-getFiles :: FilePath -> FilePath -> IO [FilePath]
-getFiles path altPath = runConduitRes $
-     sourceDirectoryDeep True path
-  .| mapC (`replaceRootDirectoryWithAltPath` altPath)
+getFilesFromFolder :: FilePath -> IO [FilePath]
+getFilesFromFolder folderPath = runConduitRes $
+  sourceDirectoryDeep True folderPath
   .| sinkList
 
-replaceRootDirectoryWithAltPath :: FilePath -> FilePath -> FilePath
-replaceRootDirectoryWithAltPath path altPath =
-  if isRelative path
-    then
-      joinPath $ (altPath <> "/") : (tail . splitPath $ path)
-    else
-      joinPath $ (altPath <> "/") : (drop 2 . splitPath $ path)
+makeAltPath :: FilePath -> FilePath -> FilePath -> Text
+makeAltPath altFolderPath folderPath filePath = do
+  let prefixPathLength = length (addTrailingPathSeparator folderPath)
+  let suffixPath = drop prefixPathLength filePath
+  pack $ addTrailingPathSeparator altFolderPath </> suffixPath

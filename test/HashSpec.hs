@@ -62,12 +62,16 @@ spec = describe "HashSpec" $ do
       inlineHashes fileHashes bucketFiles `shouldThrow`
         (== HashNotFound "file100.txt")
 
-  context "hashing files" $
+  context "hashing files" $ do
     it "throws if the file or folder doesn't exist" $
-      createHash "file1.txt" `shouldThrow`
-        (== FileOrFolderDoesNotExist "file1.txt")
+      createHash "bigfoot.txt" `shouldThrow`
+        (== FileOrFolderDoesNotExist "bigfoot.txt")
 
-    it "can hash a single file" $
-      void $ createHash "SOMEPATH"
+    -- Verified with openssl
+    it "can hash a single file" $ do
+      hash <- createHash "data/testFile1.txt"
+      show hash `shouldBe` "1c68ea370b40c06fcaf7f26c8b1dba9d9caf5dea"
 
-    it "can the contents" $ undefined
+    it "can hash a folder" $ do
+      hash <- createHash "data"
+      show hash `shouldBe` "8dee0c817ddd59c60a3be0f4f06165ddf42794c0"
