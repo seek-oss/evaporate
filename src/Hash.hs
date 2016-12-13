@@ -21,7 +21,6 @@ import           Crypto.Hash.Conduit (sinkHash)
 import           Data.Conduit ((.|))
 import qualified Data.HashMap.Lazy as HashMap
 import           Data.Text (pack, unpack, Text)
-import           System.Directory (doesDirectoryExist, doesFileExist)
 import           System.FilePath.Posix (joinPath)
 
 import           StackParameters (paths, BucketFiles(..))
@@ -29,7 +28,9 @@ import           Types ( Paths
                        , FileHashes
                        , FileOrFolderDoesNotExist(..)
                        , HashNotFound(..)
+                       , PathType(..)
                        )
+import           Utils (checkPath)
 
 inlineHashes :: MonadThrow m => FileHashes -> BucketFiles -> m BucketFiles
 inlineHashes hashedPaths bucketFiles@BucketFiles{..} =
@@ -60,14 +61,10 @@ hashBucketFiles BucketFiles{..} =
       return $ (pack . show) hash
 
 createHash :: (MonadThrow m, MonadBaseControl IO m, MonadIO m)
-                    => FilePath
-                    -> m (Digest SHA1)
-createHash path =
-  (liftIO . doesDirectoryExist) path >>= \case
-    True -> runConduitRes $
-            sourceDirectoryDeep True path
-         .| awaitForever sourceFile
-         .| sinkHash
-    False -> (liftIO . doesFileExist) path >>= \case
-      True -> runConduitRes $ sourceFile path .| sinkHash
-      False -> throwM $ FileOrFolderDoesNotExist (pack path)
+           => FilePath
+           -> m (Digest SHA1)
+createHash path = do
+  producer <- checkPath path >>= \case
+    File      f -> return $ sourceFile f
+    Directory d -> return $ sourceDirectoryDeep True d .| awaitForever sourceFile
+  runConduitRes $ producer .| sinkHash

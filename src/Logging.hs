@@ -38,7 +38,7 @@ logMain :: LogParameters -> Text
 logMain LogParameters{..} =
      logGeneral _lpCommand _lpAwsAccountID _lpRegion
   <> "\nStack(s) being operated on:"
-  <> mconcat (fmap logStackName _lpStackDescriptions)
+  <> foldMap logStackName _lpStackDescriptions
 
 logStackOutputs :: Maybe StackOutputs -> Text
 logStackOutputs (Just stackOutputs) =
@@ -82,7 +82,7 @@ logZip :: FilePath -> [FilePath] -> Text
 logZip nameOfZip filePaths =
      "Creating archive "
   <> pack nameOfZip
-  <> mconcat (fmap logFileInZip filePaths)
+  <> foldMap logFileInZip filePaths
   where
     logFileInZip filePath = "\n    " <> pack filePath
 

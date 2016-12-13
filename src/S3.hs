@@ -5,7 +5,6 @@ module S3( uploadFileOrFolder
          , makeS3FilePath
          ) where
 
-import           Control.Exception.Safe (throwM)
 import           Control.Monad (void)
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.AWS (send, AWSConstraint)
@@ -17,15 +16,12 @@ import           Network.AWS ( chunkedFile
                              )
 import qualified Network.AWS.S3 as S3
 import           Network.AWS.S3.Types (BucketName(..))
-import           System.Directory ( doesDirectoryExist
-                                  , doesFileExist
-                                  )
 import           System.FilePath.Posix ((</>), addTrailingPathSeparator)
 
 import           Logging (logEvaporate, logFileUpload)
 import           StackParameters (BucketFiles(..))
-import           Types (FileOrFolderDoesNotExist(..))
-import           Utils (getFilesFromFolder)
+import           Types (PathType(..))
+import           Utils (getFilesFromFolder, checkPath)
 
 uploadBucketFiles :: AWSConstraint r m => BucketFiles -> m ()
 uploadBucketFiles bucketFiles =
@@ -43,11 +39,9 @@ uploadBucketFiles bucketFiles =
 
 uploadFileOrFolder :: AWSConstraint r m => (BucketName, Text, Text) -> m ()
 uploadFileOrFolder (bucketName, path, altPath) =
-  (liftIO . doesDirectoryExist) (unpack path) >>= \case
-    True  -> uploadFolderToS3 bucketName path altPath
-    False -> (liftIO . doesFileExist) (unpack path) >>= \case
-      True -> uploadFileToS3 bucketName path altPath
-      False -> throwM $ FileOrFolderDoesNotExist path
+  checkPath (unpack path) >>= \case
+    File      _ -> uploadFileToS3 bucketName path altPath
+    Directory _ -> uploadFolderToS3 bucketName path altPath
 
 uploadFileToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
 uploadFileToS3 bucketName filePath altFilePath = do
