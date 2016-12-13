@@ -96,9 +96,8 @@ execute Options{..} = do
     awsAccountID <- getAccountID
     stackDependencyGraph <- makeStackDependencyGraph stackDescriptions awsAccountID
     orderedStackDescriptions <- determineStackOrdering stackDependencyGraph
-    let region = awsEnv ^. envRegion
-    logEvaporate . logMain $
-      LogParameters command orderedStackDescriptions awsAccountID region
+    logEvaporate . logMain . LogParameters
+      command orderedStackDescriptions awsAccountID $ awsEnv ^. envRegion
     if isDryRun then
       logEvaporate "Dry run enabled. No commands will be executed."
     else

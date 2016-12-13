@@ -25,10 +25,7 @@ import           Data.Monoid ((<>))
 import           Data.Text (pack, unpack, Text)
 import           Data.Foldable (traverse_)
 import           Data.Tuple.Extra ((***))
-import           System.Directory ( removeFile
-                                  , doesDirectoryExist
-                                  , doesFileExist
-                                  )
+import           System.Directory (removeFile)
 import           System.FilePath ( takeFileName
                                  , takeDirectory
                                  , dropTrailingPathSeparator
@@ -38,8 +35,8 @@ import           System.IO.Error (isDoesNotExistError)
 
 import           Logging (logEvaporate, logZip)
 import           StackParameters (paths, BucketFiles(..))
-import           Types (FileOrFolderDoesNotExist(..))
-import           Utils (getFilesFromFolder)
+import           Types (PathType(..))
+import           Utils (getFilesFromFolder, checkPath)
 
 inlineZips :: BucketFiles -> BucketFiles
 inlineZips bucketFiles@BucketFiles{..} =
@@ -73,23 +70,19 @@ writeZip pathToFile = do
   let stringPath = dropTrailingPathSeparator . unpack $ pathToFile
   let nameOfZip = takeFileName stringPath <> ".zip"
   void . register $ deleteFileIfExists nameOfZip
-  (liftIO . doesDirectoryExist) stringPath >>= \case
-    True -> liftIO $
-      getFilesFromFolder stringPath >>= writeFileOrFolderToZip nameOfZip stringPath
-    False -> (liftIO . doesFileExist) stringPath >>= \case
-      True -> liftIO $ writeFileOrFolderToZip nameOfZip (takeDirectory stringPath) [stringPath]
-      False -> throwM $ FileOrFolderDoesNotExist pathToFile
+  checkPath stringPath >>= \case
+    File      f -> liftIO $ writeFileOrFolderToZip nameOfZip (takeDirectory f) [f]
+    Directory d -> liftIO $ getFilesFromFolder d >>= writeFileOrFolderToZip nameOfZip d
 
 writeFileOrFolderToZip :: FilePath -> FilePath -> [FilePath] -> IO ()
 writeFileOrFolderToZip nameOfZip rootPath filePaths = do
-  archive <- foldM
-    (\archive path -> do
-      let zipPath = getPathInArchive rootPath path
-      addFilesToArchive [OptVerbose, OptLocation zipPath False] archive [path])
-    emptyArchive
-    filePaths
+  archive <- foldM folder emptyArchive filePaths
   logEvaporate $ logZip nameOfZip filePaths
   BS.writeFile nameOfZip (fromArchive archive)
+  where
+    folder archive path = do
+      let zipPath = getPathInArchive rootPath path
+      addFilesToArchive [OptVerbose, OptLocation zipPath False] archive [path]
 
 getPathInArchive :: FilePath -> FilePath -> FilePath
 getPathInArchive rootPath (takeDirectory -> pathDirectory) =

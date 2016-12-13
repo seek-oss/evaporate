@@ -17,6 +17,9 @@ type Paths             = HashMap Text Text
 type AWSAccountID      = Text
 type Tags              = HashMap Text Text
 
+data PathType = File FilePath | Directory FilePath
+  deriving (Show, Eq)
+
 newtype EvaporateException = EvaporateException Text
   deriving (Eq, Show, Typeable)
 
