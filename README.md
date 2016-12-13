@@ -258,17 +258,21 @@ s3upload:
 - bucket-name: lambdaBucket
   zip: true
   paths:
-    path/to/sourceFile2.py: sourceFile2.py
-    path/to/sourceFolder2: sourceFolder2
+    - path/to/sourceFile2.py
+    - path/to/sourceFolder2
 ```
 
 would result in the following files being uploaded to the root folder of the
 `lambdaBucket` s3 bucket:
 ```
 sourceFile1.py.zip
+  - sourceFile1.py
 sourceFolder1.zip
+  - contents of sourceFolder1
 sourceFile2.py.zip
+  - sourceFile2.py
 sourceFolder2.zip
+  - contents of sourceFolder2
 ```
 
 Both the `hash` and `zip` flag can be used together. This will yield the same
