@@ -2,7 +2,7 @@
 module Zip( inlineZips
           , writeZips
           , writeZip
-          , writeFolderToZip
+          , writeFileOrFolderToZip
           ) where
 
 import           Codec.Archive.Zip ( addFilesToArchive
@@ -33,7 +33,6 @@ import           System.IO.Error (isDoesNotExistError)
 import           Logging (logEvaporate)
 import           StackParameters (paths, BucketFiles(..))
 import           Types (FileOrFolderDoesNotExist(..))
-import           Utils (getFilesFromFolder)
 
 inlineZips :: BucketFiles -> BucketFiles
 inlineZips bucketFiles@BucketFiles{..} =
@@ -68,21 +67,14 @@ writeZip pathToFile = do
   let nameOfZip = (takeFileName . dropTrailingPathSeparator $ stringPath) <> ".zip"
   void . register $ deleteFileIfExists nameOfZip
   (liftIO . doesDirectoryExist) stringPath >>= \case
-    True -> liftIO . writeFolderToZip stringPath $ nameOfZip
+    True -> liftIO . writeFileOrFolderToZip stringPath $ nameOfZip
     False -> (liftIO . doesFileExist) stringPath >>= \case
-      True -> liftIO . writeFileToZip stringPath $ nameOfZip
+      True -> liftIO . writeFileOrFolderToZip stringPath $ nameOfZip
       False -> throwM $ FileOrFolderDoesNotExist pathToFile
 
-writeFileToZip :: FilePath -> FilePath -> IO ()
-writeFileToZip path nameOfZip = do
-  archive <- addFilesToArchive [OptRecursive] emptyArchive [path]
-  logEvaporate $ "Zipping " <> pack path
-  BS.writeFile nameOfZip (fromArchive archive)
-
-writeFolderToZip :: FilePath -> FilePath -> IO ()
-writeFolderToZip path nameOfZip = do
-  directoryFiles <- getFilesFromFolder path
+writeFileOrFolderToZip :: FilePath -> FilePath -> IO ()
+writeFileOrFolderToZip path nameOfZip = do
   archive <- addFilesToArchive
-    [OptRecursive, OptLocation "." False] emptyArchive directoryFiles
+    [OptRecursive] emptyArchive [path]
   logEvaporate $ "Zipping " <> pack path
   BS.writeFile nameOfZip (fromArchive archive)
