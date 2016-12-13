@@ -275,9 +275,6 @@ Both the `hash` and `zip` flag can be used together. This will yield the same
 result as having just the `zip` flag, except all file paths will be
 prefixed with the hash of their contents.
 
-*NB:* When zipping a folder, the structure of the folder is flattened since AWS
-Lambda can only detect source files in the root of an archive.
-
 *NB:* The `.zip` suffix will be added to the alternate file path so there is no
 need to explicitly name the alternate path `path/to/file.zip` as this will
 result in a file called `file.zip.zip`.

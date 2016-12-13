@@ -2,7 +2,7 @@
 module S3( uploadFileOrFolder
          , getFilesFromFolder
          , uploadBucketFiles
-         , makeAltPath
+         , makeS3FilePath
          ) where
 
 import           Control.Exception.Safe (throwM)
@@ -60,11 +60,11 @@ uploadFileToS3 bucketName filePath altFilePath = do
 uploadFolderToS3 :: AWSConstraint r m => BucketName -> Text -> Text -> m ()
 uploadFolderToS3 bucketName folderPath altFolderPath = do
   folderFiles <- liftIO . getFilesFromFolder $ unpack folderPath
-  let altFolderFiles = makeAltPath (unpack altFolderPath) (unpack folderPath) <$> folderFiles
+  let altFolderFiles = makeS3FilePath (unpack altFolderPath) (unpack folderPath) <$> folderFiles
   traverse_ (uncurry (S3.uploadFileToS3 bucketName)) $ zip (pack <$> folderFiles) altFolderFiles
 
-makeAltPath :: FilePath -> FilePath -> FilePath -> Text
-makeAltPath altFolderPath folderPath filePath = do
+makeS3FilePath :: FilePath -> FilePath -> FilePath -> Text
+makeS3FilePath altFolderPath folderPath filePath = do
   let prefixPathLength = length (addTrailingPathSeparator folderPath)
   let suffixPath = drop prefixPathLength filePath
   pack $ addTrailingPathSeparator altFolderPath </> suffixPath

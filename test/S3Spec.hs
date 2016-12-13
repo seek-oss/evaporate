@@ -3,7 +3,7 @@ module S3Spec where
 import Test.Hspec (describe, context, it, hspec, Spec)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 
-import S3 (makeAltPath)
+import S3 (makeS3FilePath)
 
 main :: IO ()
 main = hspec spec
@@ -16,7 +16,7 @@ spec = describe "S3" $ do
       let folderPath = "folder1"
       let filePath = "folder1/test.txt"
       let altFolderPath = "myFolder"
-      let result = makeAltPath altFolderPath folderPath filePath
+      let result = makeS3FilePath altFolderPath folderPath filePath
       result `shouldBe` "myFolder/test.txt"
 
     it "can make an alternate path for a non-nested folder, a nested file and \
@@ -24,7 +24,7 @@ spec = describe "S3" $ do
       let folderPath = "folder1"
       let filePath = "folder1/folder2/test.txt"
       let altFolderPath = "myFolder"
-      let result = makeAltPath altFolderPath folderPath filePath
+      let result = makeS3FilePath altFolderPath folderPath filePath
       result `shouldBe` "myFolder/folder2/test.txt"
 
     it "can make an alternate path for a nested folder, a nested file and a \
@@ -32,7 +32,7 @@ spec = describe "S3" $ do
       let folderPath = "folder1/folder2"
       let filePath = "folder1/folder2/test.txt"
       let altFolderPath = "myFolder"
-      let result = makeAltPath altFolderPath folderPath filePath
+      let result = makeS3FilePath altFolderPath folderPath filePath
       result `shouldBe` "myFolder/test.txt"
 
     it "can make an alternate path for a non-nested folder, a non-nested file \
@@ -40,7 +40,7 @@ spec = describe "S3" $ do
       let folderPath = "folder1"
       let filePath = "folder1/test.txt"
       let altFolderPath = "myFolder/myInnerFolder"
-      let result = makeAltPath altFolderPath folderPath filePath
+      let result = makeS3FilePath altFolderPath folderPath filePath
       result `shouldBe` "myFolder/myInnerFolder/test.txt"
 
     it "can make an alternate path for a nested folder, a nested file and a \
@@ -48,5 +48,5 @@ spec = describe "S3" $ do
       let folderPath = "folder1/folder2"
       let filePath = "folder1/folder2/test.txt"
       let altFolderPath = "myFolder/myInnerFolder"
-      let result = makeAltPath altFolderPath folderPath filePath
+      let result = makeS3FilePath altFolderPath folderPath filePath
       result `shouldBe` "myFolder/myInnerFolder/test.txt"
