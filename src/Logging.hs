@@ -78,6 +78,14 @@ logFileUpload filePath altFilePath (BucketName bucketName) =
   <> " as "       <> altFilePath
   <> " to "       <> bucketName
 
+logZip :: FilePath -> [FilePath] -> Text
+logZip nameOfZip filePaths =
+     "Creating archive "
+  <> pack nameOfZip
+  <> mconcat (fmap logFileInZip filePaths)
+  where
+    logFileInZip filePath = "\n    " <> pack filePath
+
 -- Based off the amazonka logger
 customLogger :: MonadIO m => LogLevel -> Handle -> Filters -> m Logger
 customLogger level handle filters = liftIO $ do

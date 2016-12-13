@@ -7,13 +7,13 @@ import Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
 
 import StackParameters (BucketFiles(..))
 import Types (FileOrFolderDoesNotExist(..))
-import Zip(inlineZips, writeZip)
+import Zip(inlineZips, writeZip, getPathInArchive)
 
 main :: IO ()
 main = hspec spec
 
 spec :: Spec
-spec = describe "ZipSpec" $
+spec = describe "ZipSpec" $ do
   context "replacing file paths and alternate file paths with zipped extensions" $ do
     it "can append paths and alternate paths with '.zip'" $ do
       let bucketFiles = BucketFiles
@@ -43,3 +43,24 @@ spec = describe "ZipSpec" $
     it "should throw if a file or folder can't be found" $ do
       let path = "this/file/does/not/exit.blah"
       (runResourceT . writeZip) path `shouldThrow` (== FileOrFolderDoesNotExist path)
+
+  context "archive paths" $ do
+    it "file in empty root path" $ do
+      let rootPath = ""
+      let path = "file.txt"
+      getPathInArchive rootPath path `shouldBe` ""
+
+    it "file in folder in empty root path" $ do
+      let rootPath = ""
+      let path = "folder/file.txt"
+      getPathInArchive rootPath path `shouldBe` "folder"
+
+    it "file in folder root path" $ do
+      let rootPath = "folder"
+      let path = "folder/file.txt"
+      getPathInArchive rootPath path `shouldBe` ""
+
+    it "file in folder in folder root path" $ do
+      let rootPath = "folder"
+      let path = "folder/folder2/file.txt"
+      getPathInArchive rootPath path `shouldBe` "folder2"

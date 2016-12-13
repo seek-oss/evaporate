@@ -21,6 +21,7 @@ import Logging ( logMain
                , logExecution
                , logStackOutputs
                , logFileUpload
+               , logZip
                , filterBuilderBy
                , LogParameters(..)
                )
@@ -97,6 +98,14 @@ spec = describe "LoggingSpec" $ do
            "Uploading myFolder/myFile.txt"
         <> " as folder/myFile.txt"
         <> " to myBucket"
+
+    it "can generate a zip log message" $ do
+      let nameOfZip = "test.zip"
+      let paths = ["folder/file1.txt", "folder/file2.txt"]
+      logZip nameOfZip paths `shouldBe`
+           "Creating archive test.zip"
+        <> "\n    folder/file1.txt"
+        <> "\n    folder/file2.txt"
 
     it "logs properly when there are no stack outputs" $ do
       let stackOutputs = Nothing
