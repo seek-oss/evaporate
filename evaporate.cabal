@@ -17,6 +17,7 @@ library
                      , ExternalValues
                      , Hash
                      , Evaporate
+                     , FileSystem
                      , Logging
                      , S3
                      , Stack
@@ -24,7 +25,6 @@ library
                      , StackParameters
                      , STS
                      , Types
-                     , Utils
                      , Zip
   other-modules:       Paths_evaporate
   build-depends:       base >= 4.7 && < 5

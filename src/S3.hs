@@ -21,7 +21,7 @@ import           System.FilePath.Posix ((</>), addTrailingPathSeparator)
 import           Logging (logEvaporate, logFileUpload)
 import           StackParameters (BucketFiles(..))
 import           Types (PathType(..))
-import           Utils (getFilesFromFolder, checkPath)
+import           FileSystem (getFilesFromFolder, checkPath)
 
 uploadBucketFiles :: AWSConstraint r m => BucketFiles -> m ()
 uploadBucketFiles bucketFiles =
