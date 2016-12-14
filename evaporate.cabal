@@ -96,6 +96,7 @@ test-suite evaporate-test
                      , amazonka-s3
                      , either
                      , exceptions
+                     , filepath
                      , fgl
                      , hspec
                      , hspec-core

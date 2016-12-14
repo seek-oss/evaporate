@@ -1,0 +1,5 @@
+* text=auto
+
+# Retain LF endings for text files in data because they're used in hashing
+# tests and the tests will fail if the git rewrites the line endings
+data/**/*.txt text=auto eol=lf

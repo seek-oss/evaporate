@@ -1,13 +1,15 @@
 module ZipSpec (spec, main) where
 
 import Control.Monad.Trans.Resource (runResourceT)
+import Data.Text (pack)
 import Network.AWS.S3.Types (BucketName(..))
+import System.FilePath ( (</>) )
 import Test.Hspec (describe , context , it , hspec , Spec)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
 
 import StackParameters (BucketFiles(..))
 import Types (FileOrFolderDoesNotExist(..))
-import Zip(inlineZips, writeZip, getPathInArchive)
+import Zip (inlineZips, writeZip, getPathInArchive)
 
 main :: IO ()
 main = hspec spec
@@ -22,9 +24,9 @@ spec = describe "ZipSpec" $ do
             , _isZipped   = True
             , _paths      = [
                              ("file1.txt", "newName")
-                            ,("path/to/file.txt", "path/to/file.txt")
+                            ,(pack $ "path" </> "to" </> "file.txt", pack $ "path" </> "to" </> "file.txt")
                             ,("folder", "folder")
-                            ,("path/to/folder2", "path/to/folder2")
+                            ,(pack $ "path" </> "to" </> "folder2", pack $ "path" </> "to" </> "folder2")
                             ]
             }
       let output = BucketFiles
@@ -33,15 +35,15 @@ spec = describe "ZipSpec" $ do
             , _isZipped   = True
             , _paths      = [
                              ("file1.txt.zip", "newName.zip")
-                            ,("file.txt.zip", "path/to/file.txt.zip")
+                            ,("file.txt.zip", pack $ "path" </> "to" </> "file.txt.zip")
                             ,("folder.zip", "folder.zip")
-                            ,("folder2.zip", "path/to/folder2.zip")
+                            ,("folder2.zip", pack $ "path" </> "to" </> "folder2.zip")
                             ]
             }
       inlineZips bucketFiles `shouldBe` output
 
     it "should throw if a file or folder can't be found" $ do
-      let path = "this/file/does/not/exit.blah"
+      let path = pack $ "this" </> "file" </> "does" </> "not" </> "exit.blah"
       (runResourceT . writeZip) path `shouldThrow` (== FileOrFolderDoesNotExist path)
 
   context "archive paths" $ do
@@ -52,15 +54,15 @@ spec = describe "ZipSpec" $ do
 
     it "file in folder in empty root path" $ do
       let rootPath = ""
-      let path = "folder/file.txt"
+      let path = "folder" </> "file.txt"
       getPathInArchive rootPath path `shouldBe` "folder"
 
     it "file in folder root path" $ do
       let rootPath = "folder"
-      let path = "folder/file.txt"
+      let path = "folder" </> "file.txt"
       getPathInArchive rootPath path `shouldBe` ""
 
     it "file in folder in folder root path" $ do
       let rootPath = "folder"
-      let path = "folder/folder2/file.txt"
+      let path = "folder" </> "folder2" </> "file.txt"
       getPathInArchive rootPath path `shouldBe` "folder2"
