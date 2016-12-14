@@ -82,7 +82,7 @@ writeFileOrFolderToZip nameOfZip rootPath filePaths = do
   where
     folder archive path = do
       let zipPath = getPathInArchive rootPath path
-      addFilesToArchive [OptVerbose, OptLocation zipPath False] archive [path]
+      addFilesToArchive [OptLocation zipPath False] archive [path]
 
 getPathInArchive :: FilePath -> FilePath -> FilePath
 getPathInArchive rootPath (takeDirectory -> pathDirectory) =
