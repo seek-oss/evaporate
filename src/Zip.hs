@@ -36,7 +36,7 @@ import           System.IO.Error (isDoesNotExistError)
 import           Logging (logEvaporate, logZip)
 import           StackParameters (paths, BucketFiles(..))
 import           Types (PathType(..))
-import           Utils (getFilesFromFolder, checkPath)
+import           FileSystem (checkPath, getFilesFromFolder)
 
 inlineZips :: BucketFiles -> BucketFiles
 inlineZips bucketFiles@BucketFiles{..} =

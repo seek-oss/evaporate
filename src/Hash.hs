@@ -8,7 +8,6 @@ module Hash( inlineHashes
 
 import           Conduit ( sourceFile
                          , runConduitRes
-                         , sourceDirectoryDeep
                          , awaitForever
                          , MonadBaseControl
                          )
@@ -28,9 +27,8 @@ import           Types ( Paths
                        , FileHashes
                        , FileOrFolderDoesNotExist(..)
                        , HashNotFound(..)
-                       , PathType(..)
                        )
-import           Utils (checkPath)
+import           FileSystem (sourceFileOrDirectory)
 
 inlineHashes :: MonadThrow m => FileHashes -> BucketFiles -> m BucketFiles
 inlineHashes hashedPaths bucketFiles@BucketFiles{..} =
@@ -63,8 +61,5 @@ hashBucketFiles BucketFiles{..} =
 createHash :: (MonadThrow m, MonadBaseControl IO m, MonadIO m)
            => FilePath
            -> m (Digest SHA1)
-createHash path = do
-  producer <- checkPath path >>= \case
-    File      f -> return $ sourceFile f
-    Directory d -> return $ sourceDirectoryDeep True d .| awaitForever sourceFile
-  runConduitRes $ producer .| sinkHash
+createHash path = runConduitRes $
+  sourceFileOrDirectory True path .| awaitForever sourceFile .| sinkHash
