@@ -1,4 +1,5 @@
 ## Evaporate
+[![Build Status](https://travis-ci.org/SEEK-Org/evaporate.svg?branch=master)](https://travis-ci.org/SEEK-Org/evaporate)
 
 Evaporate is a simple CloudFormation Stack deployment tool.
 
