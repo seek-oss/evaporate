@@ -1,0 +1,80 @@
+sudo: required
+
+os:
+  - linux
+  - osx
+
+services:
+  - docker
+
+language: generic
+
+env:
+  global:
+    - DOCKER_REPO=seek/evaporate;
+
+# Caching so the next build will be fast too
+cache:
+  directories:
+  - $HOME/.stack
+
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+
+before_install:
+  - set -e
+  - mkdir -p ~/.local/bin
+  - export PATH=$PATH:$HOME/.local/bin
+  # Download and unpack the stack executable
+  # Could use $TRAVIS_OS_NAME to get the right stack executable but it's
+  # probably better not to rely on that env var too much
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    travis_retry curl -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 -C ~/.local/bin '*/stack';
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
+    fi
+
+install:
+  # Build dependencies
+  - stack test --no-terminal --install-ghc --only-dependencies
+
+before_script:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    rvm get head || true;
+    fi
+  - if [[ !  -z  $TRAVIS_TAG  ]]; then
+    VERSION=${TRAVIS_TAG//[\-a-zA-Z]/};
+    echo "Tag detected - updating cabal to match tag version $VERSION";
+    sed -i -e "s|\(^version:[[:space:]]*\)[[:digit:]][[:digit:]]*\.[[:digit:]][[:digit:]]*\.[[:digit:]][[:digit:]]*\.[[:digit:]][[:digit:]]*|\1$VERSION|" evaporate.cabal;
+    fi
+
+script:
+  # Build the package, its tests and run the tests
+  - stack test --no-terminal --ghc-options -Wall
+  - BINARY=$(stack path --local-install-root)/bin/evaporate;
+
+before_deploy:
+  - ZIP_NAME=evaporate-$TRAVIS_OS_NAME-$TRAVIS_TAG.zip
+  - cp $BINARY .
+  - zip $ZIP_NAME evaporate README.md
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    mkdir -p .publish;
+    cp $BINARY .publish;
+    echo "Building docker container for $TRAVIS_TAG";
+    docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD;
+    docker build -f build-publish.dockerfile -t "$DOCKER_REPO" .;
+    docker tag "$DOCKER_REPO" "$DOCKER_REPO:$TRAVIS_TAG";
+    echo "Pushing docker image $DOCKER_REPO:$TRAVIS_TAG";
+    docker push "$DOCKER_REPO";
+    fi
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_OAUTH_TOKEN
+  skip_cleanup: true
+  file: $ZIP_NAME
+  on:
+    tags: true
