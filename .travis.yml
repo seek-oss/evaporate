@@ -60,16 +60,6 @@ before_deploy:
   - ZIP_NAME=evaporate-$TRAVIS_OS_NAME-$TRAVIS_TAG.zip
   - cp $BINARY .
   - zip $ZIP_NAME evaporate README.md
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-    mkdir -p .publish;
-    cp $BINARY .publish;
-    echo "Building docker container for $TRAVIS_TAG";
-    docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD;
-    docker build -f build-publish.dockerfile -t "$DOCKER_REPO" .;
-    docker tag "$DOCKER_REPO" "$DOCKER_REPO:$TRAVIS_TAG";
-    echo "Pushing docker image $DOCKER_REPO:$TRAVIS_TAG";
-    docker push "$DOCKER_REPO";
-    fi
 
 deploy:
   provider: releases
