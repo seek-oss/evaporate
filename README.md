@@ -1,5 +1,5 @@
 ## Evaporate
-[![Build Status](https://travis-ci.org/SEEK-Org/evaporate.svg?branch=master)](https://travis-ci.org/SEEK-Org/evaporate)
+[![Build Status](https://travis-ci.org/seek-oss/evaporate.svg?branch=master)](https://travis-ci.org/seek-oss/evaporate)
 
 Evaporate is a simple CloudFormation Stack deployment tool.
 
@@ -16,16 +16,15 @@ Pull the latest docker image from `seek/evaporate`.
 
 ### Binary
 
-(Automatic releases via Travis CI is coming soon.)
 Download the latest binary from the
-[releases page](https://github.com/SEEK-Org/evaporate/releases).
+[releases page](https://github.com/seek-oss/evaporate/releases).
 
 ### From source
 
 1. Ensure [The Haskell Stack](https://docs.haskellstack.org/en/stable/README/)
 is installed
 
-2. Git clone https://github.com/SEEK-Org/evaporate to a temp location
+2. Git clone https://github.com/seek-oss/evaporate to a temp location
 
 3. From within the evaporate repository, execute the following:
 
