@@ -92,7 +92,7 @@ data StackDescription = StackDescription {
 
 makeLenses ''BucketFiles
 
-instance FromJSON [StackDescription] where
+instance {-# OVERLAPPING #-} FromJSON [StackDescription] where
   parseJSON = withObject "List of Stack Descriptions" $
     traverse (uncurry parseStack) . HashMap.toList
     where
