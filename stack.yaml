@@ -2,21 +2,13 @@
 # For more information, see: http://docs.haskellstack.org/en/stable/yaml_configuration/
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: lts-7.6
+resolver: lts-8.5
 
 # Local packages, usually specified by relative directory name
 packages:
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps:
-- amazonka-1.4.5
-- amazonka-cloudformation-1.4.5
-- amazonka-core-1.4.5
-- amazonka-sts-1.4.5
-- amazonka-s3-1.4.5
-- http-conduit-2.2.3
-- http-client-0.5.4
-- http-client-tls-0.3.3
+extra-deps: []
 
 # Override default flag values for local packages and extra-deps
 flags: {}
