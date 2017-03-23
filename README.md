@@ -60,7 +60,7 @@ definition. A stack definition consists of the following:
 
 1. A stack name
 1. A path to a json stack template
-1. The parameters specified in the stack template file (separated by AWS account ID)
+1. (Optional) The parameters specified in the stack template file (separated by AWS account ID)
 1. (Optional) Up to 10 tags as key value pairs
    (keys can be 127 characters max, values can be 255 characters max)
 1. (Optional) Files to upload to buckets created within previous stacks
@@ -97,15 +97,7 @@ to specific accounts. Before executing any commands, the account ID you are
 authenticated to is checked against the account IDs in `evaporate.yaml`. If the
 account ID is not found, no commands will be executed.
 
-In the case where your stack doesn't require any parameters, then for each AWS
-Account ID key make its corresponding value an empty dictionary:
-```
-123456789999: {}
-```
-Do not do this:
-```
-parameters: {}
-```
+If the stack doesn't require any parameters then it can be omitted from the configuration.
 
 #### Tags
 
@@ -354,7 +346,7 @@ docker run \
 
 Evaporate chooses the parameter values from `evaporate.yaml` based upon
 which account you have authenticated to, so you can never accidentally deploy
-Sandbox parameters to the Production account.
+Sandbox parameters to the Production account or vice versa.
 
 *NB*: Any files or folders you wish to upload to an S3 bucket must be added
 to the docker run command with an extra `-v` flag. You then reference the

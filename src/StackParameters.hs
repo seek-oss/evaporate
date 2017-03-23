@@ -104,7 +104,7 @@ instance {-# OVERLAPPING #-} FromJSON [StackDescription] where
               <*> o .:? "s3upload" .!= mempty
               <*> o .:  "template-path"
               <*> o .:? "tags" .!= mempty
-              <*> o .:  "parameters"
+              <*> o .:? "parameters" .!= mempty
 
 -- | Leaning on the Amazonka FromText instance for the Capability type
 -- but newtype wrapping into Capabilities to slightly weaken the coupling
@@ -199,9 +199,10 @@ stackOutputName = StackOutput <$>
     )
 
 getParameters :: MonadThrow m => Environments -> AWSAccountID -> m Parameters
-getParameters envs acc = case HashMap.lookup acc envs of
-  Nothing -> throwM $ EnvironmentNotFound acc
-  Just ps -> return ps
+getParameters envs acc
+  | HashMap.null envs                  = pure mempty
+  | Just ps <- HashMap.lookup acc envs = pure ps
+  | otherwise                          = throwM $ EnvironmentNotFound acc
 
 convertToStackParameters :: LoadedParameters -> [Parameter]
 convertToStackParameters = fmap makeParameter . HashMap.toList
