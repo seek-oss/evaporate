@@ -22,7 +22,11 @@ import Test.Hspec ( describe
                   , Selector
                   , Spec
                   )
-import Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow, shouldSatisfy)
+import Test.Hspec.Expectations.Pretty ( shouldBe
+                                      , shouldThrow
+                                      , shouldSatisfy
+                                      , shouldReturn
+                                      )
 import Text.Trifecta (parseString, _Failure, Result(..))
 
 import StackParameters ( getStackParameters
@@ -65,14 +69,16 @@ spec = describe "StackParametersSpec" $ do
       ]
 
   context "getting environment" $ do
-    it "can get list of Parameters from Environments and an AWSAccount" $ do
-      input <- getParameters [("12345678", [("key1", SimpleValue "value1")])] "12345678"
-      let params = [("key1", SimpleValue "value1")]
-      input `shouldBe` params
+    it "can get list of Parameters from Environments and an AWSAccount" $
+      getParameters [("12345678", [("key1", SimpleValue "value1")])] "12345678"
+        `shouldReturn` [("key1", SimpleValue "value1")]
 
-    it "throws if the account can not be found" $
-      getParameters [("87654321", [("key1", SimpleValue "value1")])] "12123434" `shouldThrow`
-        (== EnvironmentNotFound "12123434")
+    it "when there are no environments, returns empty parameters" $ do
+      getParameters [] "12123434" `shouldReturn`  mempty
+
+    it "when there are environments, throws if the account can not be found" $
+      getParameters [("87654321", [("key1", SimpleValue "value1")])] "12123434"
+      `shouldThrow` (== EnvironmentNotFound "12123434")
 
   context "parsing yaml file" $ do
     it "can parse valid.yaml" $ do

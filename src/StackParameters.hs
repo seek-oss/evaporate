@@ -199,6 +199,7 @@ stackOutputName = StackOutput <$>
     )
 
 getParameters :: MonadThrow m => Environments -> AWSAccountID -> m Parameters
+getParameters envs _ | HashMap.null envs = pure mempty
 getParameters envs acc = case HashMap.lookup acc envs of
   Nothing -> throwM $ EnvironmentNotFound acc
   Just ps -> return ps
