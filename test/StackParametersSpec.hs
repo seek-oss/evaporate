@@ -148,6 +148,19 @@ spec = describe "StackParametersSpec" $ do
                              ,("env3", [("aws-external-id", SimpleValue "pqrst45678")])
                            ]}]
 
+    describe "parameters are optional" $
+      it "can parse no-parameters.yaml" $ do
+        result <- runExceptT . getStackParameters $ "test/no-parameters.yaml"
+        fromRight' result `shouldBe` [
+          StackDescription { _stackName = StackName "Stack1"
+                           , _capabilities = mempty
+                           , _s3upload = mempty
+                           , _templatePath = "template.json"
+                           , _tags = [ ("tag1", "test")
+                           ]
+                           , _parameters = mempty
+                           }]
+
     describe "s3uploads are optional" $
       it "can parse no-s3upload.yaml" $ do
         result <- runExceptT . getStackParameters $ "test/no-s3upload.yaml"

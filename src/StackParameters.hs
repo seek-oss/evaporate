@@ -104,7 +104,7 @@ instance {-# OVERLAPPING #-} FromJSON [StackDescription] where
               <*> o .:? "s3upload" .!= mempty
               <*> o .:  "template-path"
               <*> o .:? "tags" .!= mempty
-              <*> o .:  "parameters"
+              <*> o .:? "parameters" .!= mempty
 
 -- | Leaning on the Amazonka FromText instance for the Capability type
 -- but newtype wrapping into Capabilities to slightly weaken the coupling
