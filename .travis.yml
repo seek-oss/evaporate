@@ -4,6 +4,8 @@ os:
   - linux
   - osx
 
+osx_image: xcode7.3
+
 services:
   - docker
 
@@ -42,9 +44,6 @@ install:
   - stack test --no-terminal --install-ghc --only-dependencies
 
 before_script:
-  # Work round bug in travis xcode image described at
-  # https://github.com/direnv/direnv/issues/210
-  - shell_session_update() { :; }
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     rvm get head || true;
     fi
