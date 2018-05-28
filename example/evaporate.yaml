@@ -36,6 +36,7 @@ evaporate-example-stack2: # Stack name
   template-path: stack-template2.json
   capabilities:
     - CAPABILITY_IAM
+  region: us-east-1
   tags:
     Project: "Death Star"
     Owner: "tarkin@theempire.net"

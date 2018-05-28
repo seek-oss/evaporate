@@ -6,6 +6,7 @@ import Control.Monad.Except (runExceptT)
 import Data.Either.Combinators (fromRight')
 import Data.Text (Text)
 import Data.Yaml (ParseException)
+import Network.AWS (Region(Sydney))
 import Network.AWS.CloudFormation ( parameter
                                   , pParameterKey
                                   , pParameterValue
@@ -95,7 +96,8 @@ spec = describe "StackParametersSpec" $ do
                          , _parameters = [
                            ("env1", [("aws-external-id", SimpleValue "abcde12345")])
                           ,("env2", [("aws-external-id", EnvVarName "MY_ENV_VAR")])
-                         ]}
+                         ]
+                         , _region = Nothing}
        ,StackDescription { _stackName = StackName "Stack2"
                          , _capabilities = mempty
                          , _s3upload = [
@@ -111,7 +113,8 @@ spec = describe "StackParametersSpec" $ do
                          , _parameters = [
                            ("env1", [("aws-external-id", HashFilePath "evaporate.yaml")])
                           ,("env2", [("aws-external-id", StackOutput (StackOutputName (StackName "myStack") "myOutput"))])
-                         ]}]
+                         ]
+                         , _region = Nothing}]
 
     it "can parse capabilities" $ do
       result <- runExceptT . getStackParameters $ "test/capabilities.yaml"
@@ -121,7 +124,20 @@ spec = describe "StackParametersSpec" $ do
                          , _s3upload = []
                          , _templatePath = "template.json"
                          , _tags = []
-                         , _parameters = [] }
+                         , _parameters = []
+                         , _region = Nothing }
+        ]
+
+    it "can parse region" $ do
+      result <- runExceptT . getStackParameters $ "test/region.yaml"
+      fromRight' result `shouldBe` [
+        StackDescription { _stackName = StackName "a-stack-with-region"
+                         , _capabilities = mempty
+                         , _s3upload = []
+                         , _templatePath = "template.json"
+                         , _tags = []
+                         , _parameters = []
+                         , _region = Just Sydney }
         ]
 
     it "fails parsing invalid1.yaml" $ do
@@ -152,7 +168,8 @@ spec = describe "StackParametersSpec" $ do
                               ("env2", [("aws-external-id", SimpleValue "lmnop98765")])
                              ,("env1", [("aws-external-id", SimpleValue "abcde12345")])
                              ,("env3", [("aws-external-id", SimpleValue "pqrst45678")])
-                           ]}]
+                           ]
+                           , _region = Nothing}]
 
     describe "parameters are optional" $
       it "can parse no-parameters.yaml" $ do
@@ -165,6 +182,7 @@ spec = describe "StackParametersSpec" $ do
                            , _tags = [ ("tag1", "test")
                            ]
                            , _parameters = mempty
+                           , _region = Nothing
                            }]
 
     describe "s3uploads are optional" $
@@ -180,7 +198,9 @@ spec = describe "StackParametersSpec" $ do
                              [("env2", [("aws-external-id", SimpleValue "lmnop98765")])
                              ,("env1", [("aws-external-id", SimpleValue "abcde12345")])
                              ,("env3", [("aws-external-id", SimpleValue "pqrst45678")])
-                           ]}]
+                           ]
+                           , _region = Nothing
+                           }]
 
   context "parsing the surrounding '${' and '}' of a parameter value" $ do
     let parse :: String -> Result Text

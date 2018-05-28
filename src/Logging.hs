@@ -64,12 +64,14 @@ logStackName :: StackDescription -> Text
 logStackName StackDescription{..} =
   "\n    " <> getStackName _stackName
 
-logExecution :: Command -> StackName -> Text
-logExecution command StackName{..} =
+logExecution :: Command -> StackName -> Region -> Text
+logExecution command StackName{..} region =
      "\nExecuting "
   <> (pack . show $ command)
   <> " on "
   <> getStackName
+  <> " in "
+  <> toText region
   <> "...\n"
 
 logFileUpload :: Text -> Text -> BucketName -> Text

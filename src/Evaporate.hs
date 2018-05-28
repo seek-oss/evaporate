@@ -9,27 +9,25 @@ import           Control.Exception.Safe ( throwM
                                         , MonadThrow
                                         , Exception(..)
                                         )
-import           Control.Lens ((&), (<&>), (.~), (<>~), (^.))
+import           Control.Lens ((&), (<&>), (.~), (<>~), (^.), (%~), view)
 import           Control.Monad (void, when)
 import           Control.Monad.IO.Class (MonadIO(..))
-import           Control.Monad.Reader.Class (asks, local)
-import           Control.Monad.Trans.AWS ( newEnv
-                                         , runResourceT
+import           Control.Monad.Reader (asks, local, runReaderT, MonadReader)
+import           Control.Monad.Trans.AWS ( runResourceT
                                          , runAWST
-                                         , envRegion
                                          , AWSConstraint
                                          , Credentials(Discover)
                                          )
-import           Control.Monad.Trans.Resource (MonadBaseControl)
+import           Control.Monad.Trans.Resource (MonadBaseControl, MonadResource, liftResourceT)
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Text (pack, Text)
 import qualified Data.Text as Text
 import           Data.Tuple.Extra (both)
-import           Network.AWS (envLogger)
+import           Network.AWS (newEnv, envLogger, envRegion, Env)
 import           Network.AWS.CloudFormation (Parameter, Tag)
 import qualified Network.AWS.CloudFormation.Types as CFN
-import           Network.AWS.Types (LogLevel(..))
+import           Network.AWS.Types (LogLevel(..), Region)
 import           Network.AWS.Waiter (Accept(..))
 import           System.Environment (getEnvironment)
 import           System.IO (stdout)
@@ -42,6 +40,7 @@ import           ExternalValues ( inlineBucketNames
                                 , getStackOutputValues
                                 , cStackOutputs
                                 , cFileHashes
+                                , cEnv
                                 , Context(..)
                                 )
 import           Logging ( logMain
@@ -89,11 +88,12 @@ execute Options{..} = do
   amazonLogger      <- customLogger logLevel stdout ["[Await"]
   awsEnv            <- newEnv Discover
                        <&> envLogger .~ amazonLogger
+                       <&> setRegion defaultRegion
   stackDescriptions <- getStackParameters configFilePath
   systemEnv         <- HashMap.fromList . fmap (both pack) <$> getEnvironment
   let context = Context systemEnv mempty onCreateFailure mempty awsEnv
-  handle (exceptionHandler logLevel) $ runResourceT . runAWST context $ do
-    awsAccountID <- getAccountID
+  handle (exceptionHandler logLevel) . runResourceT $ do
+    awsAccountID <- runAWST context $ getAccountID
     stackDependencyGraph <- makeStackDependencyGraph stackDescriptions awsAccountID
     orderedStackDescriptions <- determineStackOrdering stackDependencyGraph
     logEvaporate . logMain . LogParameters
@@ -101,26 +101,35 @@ execute Options{..} = do
     if isDryRun then
       logEvaporate "Dry run enabled. No commands will be executed."
     else
-      void $ processStacks command awsAccountID orderedStackDescriptions stackNameOption
+      void $ processStacks context command awsAccountID orderedStackDescriptions stackNameOption
 
-processStacks :: forall m. (AWSConstraint Context m, MonadBaseControl IO m)
-              => Command
+processStacks :: (MonadResource m, MonadBaseControl IO m, MonadThrow m)
+              => Context
+              -> Command
               -> AWSAccountID
               -> [StackDescription]
               -> Maybe StackName
               -> m StackOutputs
-processStacks comm accountID stackDescriptions stackNameOption =
-  processEachStack filteredStacks
+processStacks context comm accountID stackDescriptions stackNameOption =
+  processEachStack filteredStacks `runReaderT` context
   where
     filteredStacks :: [StackDescription]
     filteredStacks = stackDescriptions & maybe id (filter . byStackName) stackNameOption
 
-    processEachStack :: [StackDescription] -> m StackOutputs
+    processEachStack ::
+      ( MonadResource m
+      , MonadBaseControl IO m
+      , MonadThrow m
+      , MonadReader Context m)
+      => [StackDescription]
+      -> m StackOutputs
     processEachStack [] = asks _cStackOutputs
     processEachStack (stackDescription@StackDescription{..} : otherStacks) = do
       fileHashes <- HashMap.unions <$> traverse hashBucketFiles _s3upload
       local (cFileHashes .~ fileHashes) $ do
-        newOutputs <- processStack comm accountID stackDescription
+        newOutputs <-
+          liftResourceT . runAWST (context & cEnv %~ setRegion _region) $
+            processStack comm accountID stackDescription
         local (cStackOutputs <>~ newOutputs) $ processEachStack otherStacks
 
     byStackName :: StackName -> StackDescription -> Bool
@@ -132,7 +141,8 @@ processStack :: forall m. (AWSConstraint Context m)
              -> StackDescription
              -> m StackOutputs
 processStack command accountID stackDescription@StackDescription{..} = do
-  logEvaporate $ logExecution command _stackName
+  region <- asks $ view $ cEnv . envRegion
+  logEvaporate $ logExecution command _stackName region
   case command of
     Check  -> do
       Stack.describeStack _stackName >>= liftIO . putStrLn . nicify . show
@@ -176,3 +186,8 @@ processStack command accountID stackDescription@StackDescription{..} = do
 readFileText :: MonadIO m => Text -> m Text
 readFileText filePath =
   pack <$> (liftIO . readFile $ Text.unpack filePath)
+
+setRegion :: Maybe Region -> Env -> Env
+setRegion = \case
+  Nothing -> id
+  Just region -> envRegion .~ region

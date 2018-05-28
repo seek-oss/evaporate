@@ -71,12 +71,14 @@ spec = describe "LoggingSpec" $ do
     it "can generate a command execution log message" $ do
       stackParams <- runExceptT . getStackParameters $ "test/valid.yaml"
       let desc = head . fromRight' $ stackParams
-      let logMessage = logExecution Create (_stackName desc)
+      let logMessage = logExecution Create (_stackName desc) Sydney
       logMessage `shouldBe`
            "\nExecuting "
         <> "Create"
         <> " on "
         <> "Stack1"
+        <> " in "
+        <> "ap-southeast-2"
         <> "...\n"
 
     it "can generate a stack outputs log message" $ do

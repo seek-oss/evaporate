@@ -40,9 +40,10 @@ include its default bin path into your `$PATH`.
 
 ### Region
 
-The deployment region is read from the environment variable `AWS_REGION` or
-retrieved from the [Instance Identity Document](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html),
-otherwise it defaults to `us-east-1`.
+The deployment region is read from the environment variable `AWS_REGION`;
+retrieved from the [Instance Identity Document](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html);
+overridden for all stacks with `--default-region` option; otherwise it defaults to `us-east-1`.
+Additionally, each stack definition can specify its own deployment region.
 
 ### evaporate.yaml
 
@@ -65,6 +66,7 @@ definition. A stack definition consists of the following:
    (keys can be 127 characters max, values can be 255 characters max)
 1. (Optional) Files to upload to buckets created within previous stacks
 1. (Optional) A list of Capabilities needed by the stack, e.g., CAPABILITY_IAM
+1. (Optional) A deployment region that is used to override the default, e.g. us-east-1
 
 *NB:* The order of execution is determined based on stack output references.
 If there is a cyclic dependency within the stacks (e.g. stack2 references an
