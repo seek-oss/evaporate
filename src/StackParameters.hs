@@ -28,6 +28,7 @@ import           Data.Text (unpack, Text, pack)
 import           Data.Tuple.Extra (dupe)
 import           Data.Vector (toList)
 import qualified Data.Yaml as Y
+import           Network.AWS.Types (Region)
 import           Network.AWS.Data.Text (fromText)
 import           Network.AWS.CloudFormation ( parameter
                                             , pParameterKey
@@ -88,6 +89,7 @@ data StackDescription = StackDescription {
   , _templatePath :: Text
   , _tags         :: Tags
   , _parameters   :: Environments
+  , _region       :: Maybe Region
   } deriving (Show, Eq)
 
 makeLenses ''BucketFiles
@@ -105,6 +107,7 @@ instance {-# OVERLAPPING #-} FromJSON [StackDescription] where
               <*> o .:  "template-path"
               <*> o .:? "tags" .!= mempty
               <*> o .:? "parameters" .!= mempty
+              <*> o .:? "region" .!= Nothing
 
 -- | Leaning on the Amazonka FromText instance for the Capability type
 -- but newtype wrapping into Capabilities to slightly weaken the coupling

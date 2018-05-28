@@ -1,0 +1,4 @@
+a-stack-with-region:
+  template-path: "template.json"
+  region: ap-southeast-2
+  parameters: {}
