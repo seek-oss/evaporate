@@ -127,9 +127,9 @@ processStacks context comm accountID stackDescriptions stackNameOption =
     processEachStack (stackDescription@StackDescription{..} : otherStacks) = do
       fileHashes <- HashMap.unions <$> traverse hashBucketFiles _s3upload
       local (cFileHashes .~ fileHashes) $ do
+        newContext <- asks $ cEnv %~ setRegion _region
         newOutputs <-
-          liftResourceT . runAWST (context & cEnv %~ setRegion _region) $
-            processStack comm accountID stackDescription
+          liftResourceT . runAWST newContext $ processStack comm accountID stackDescription
         local (cStackOutputs <>~ newOutputs) $ processEachStack otherStacks
 
     byStackName :: StackName -> StackDescription -> Bool
