@@ -49,7 +49,7 @@ spec = describe "StackDependencySpec" $ do
         (== DependencyCycleDetected [[StackName "test-stack5", StackName "test-stack4", StackName "test-stack3"]])
 
   context "determining stack dependencies from parameter values" $ do
-    let sourceStack = StackDescription mempty (StackName "stack2") mempty mempty mempty mempty
+    let sourceStack = StackDescription mempty (StackName "stack2") mempty mempty mempty mempty Nothing
     let sourceStackNode = (1, sourceStack)
     it "returns a dependency if given a StackOutput" $ do
       let testParameterValue = StackOutput (StackOutputName (StackName "stack1") "outputName")
@@ -99,5 +99,5 @@ acyclicStackDependencyGraph = do
   makeStackDependencyGraph stackParameters "123412341234"
 
 testStackNodeMap :: StackNodeMap
-testStackNodeMap = [(StackName "stack1", (0, StackDescription (Capabilities []) (StackName "stack1") [] "some-path.yaml" [] []))
-                   ,(StackName "stack2", (1, StackDescription (Capabilities []) (StackName "stack2") [] "some-path.yaml" [] []))]
+testStackNodeMap = [(StackName "stack1", (0, StackDescription (Capabilities []) (StackName "stack1") [] "some-path.yaml" [] [] Nothing))
+                   ,(StackName "stack2", (1, StackDescription (Capabilities []) (StackName "stack2") [] "some-path.yaml" [] [] Nothing))]

@@ -3,7 +3,8 @@ module Configuration where
 import           Data.Monoid ((<>))
 import           Data.Version (showVersion)
 import           Data.Text (Text, pack, unpack)
-import           Network.AWS.Types (LogLevel(..))
+import           Network.AWS.Data.Text (fromText)
+import           Network.AWS.Types (LogLevel(..), Region)
 import qualified Network.AWS.CloudFormation.Types as CFN
 import           Options.Applicative ( info
                                      , helper
@@ -22,6 +23,7 @@ import           Options.Applicative ( info
                                      , infoOption
                                      , hidden
                                      , str
+                                     , eitherReader
                                      , Parser
                                      , ReadM
                                      , ParserInfo(..)
@@ -45,7 +47,8 @@ data Options = Options { command         :: Command
                        , isDryRun        :: Bool
                        , logLevel        :: LogLevel
                        , onCreateFailure :: CFN.OnFailure
-                       , configFilePath  :: FilePath }
+                       , configFilePath  :: FilePath
+                       , defaultRegion   :: Maybe Region }
 
 loadConfiguration :: IO Options
 loadConfiguration =
@@ -63,6 +66,7 @@ parseOptions = Options
            <*> verbose
            <*> onCreateFailureParser
            <*> configFile
+           <*> optional parseDefaultRegion
 
 parseCommand :: Parser Command
 parseCommand = subparser $
@@ -123,6 +127,13 @@ configFile =
   <> help "The path to the yaml config file containing your stack \
   \ definitions.")
 
+parseDefaultRegion :: Parser Region
+parseDefaultRegion =
+  OB.option readRegion
+  (  long "default-region"
+  <> metavar "REGION"
+  <> help "The default AWS region for your stacks, in the region format, eg `us-east-1`.")
+
 text :: ReadM Text
 text = pack <$> str
 
@@ -134,3 +145,6 @@ parseUpsert = pure Upsert
 
 withInfo :: Parser a -> Text -> ParserInfo a
 withInfo opts = info (helper <*> opts) . progDesc . unpack
+
+readRegion :: ReadM Region
+readRegion = eitherReader (fromText . pack)
