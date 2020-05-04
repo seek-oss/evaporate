@@ -42,7 +42,7 @@ spec = describe "LoggingSpec" $ do
            "\nCommand being executed: "
         <> "Create"
         <> "\nAWS Account ID: "
-        <> "478156153062"
+        <> "478156153XXX"
         <> "\nRegion: ap-southeast-2"
 
     it "can generate a stack name log message" $ do
