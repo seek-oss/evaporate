@@ -33,6 +33,7 @@ before_install:
   # Could use $TRAVIS_OS_NAME to get the right stack executable but it's
   # probably better not to rely on that env var too much
   - travis_retry curl -sSL https://get.haskellstack.org/ | sh
+  - stack update
 
 install:
   # Build dependencies
