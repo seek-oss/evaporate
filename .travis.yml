@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 
-osx_image: xcode7.3
+osx_image: xcode11.3
 
 services:
   - docker
@@ -18,7 +18,7 @@ env:
 # Caching so the next build will be fast too
 cache:
   directories:
-  - $HOME/.stack
+    - $HOME/.stack
 
 addons:
   apt:
@@ -32,12 +32,8 @@ before_install:
   # Download and unpack the stack executable
   # Could use $TRAVIS_OS_NAME to get the right stack executable but it's
   # probably better not to rely on that env var too much
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    travis_retry curl -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 -C ~/.local/bin '*/stack';
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-    travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
-    fi
+  - travis_retry curl -sSL https://get.haskellstack.org/ | sh
+  - stack update
 
 install:
   # Build dependencies

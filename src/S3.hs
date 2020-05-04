@@ -7,21 +7,19 @@ module S3( uploadFileOrFolder
 
 import           Control.Monad (void)
 import           Control.Monad.IO.Class (MonadIO(..))
-import           Control.Monad.Trans.AWS (send, AWSConstraint)
+import           Control.Monad.Trans.AWS (AWSConstraint, send)
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
-import           Data.Text (pack, unpack, Text)
-import           Network.AWS ( chunkedFile
-                             , defaultChunkSize
-                             )
+import           Data.Text (Text, pack, unpack)
+import           Network.AWS (chunkedFile, defaultChunkSize)
 import qualified Network.AWS.S3 as S3
 import           Network.AWS.S3.Types (BucketName(..))
-import           System.FilePath.Posix ((</>), addTrailingPathSeparator)
+import           System.FilePath.Posix (addTrailingPathSeparator, (</>))
 
+import           FileSystem (checkPath, getFilesFromFolder)
 import           Logging (logEvaporate, logFileUpload)
 import           StackParameters (BucketFiles(..))
 import           Types (PathType(..))
-import           FileSystem (getFilesFromFolder, checkPath)
 
 uploadBucketFiles :: AWSConstraint r m => BucketFiles -> m ()
 uploadBucketFiles bucketFiles =

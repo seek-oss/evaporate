@@ -1,8 +1,8 @@
 module STS where
 
-import           Control.Exception.Safe (throwM, Exception(..))
+import           Control.Exception.Safe (Exception(..), throwM)
 import           Control.Lens (view)
-import           Control.Monad.Trans.AWS (send, AWSConstraint)
+import           Control.Monad.Trans.AWS (AWSConstraint, send)
 import           Data.Typeable (Typeable)
 import qualified Network.AWS.STS as AWSSTS
 

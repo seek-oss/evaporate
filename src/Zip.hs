@@ -7,36 +7,29 @@ module Zip( inlineZips
           , getPathInArchive
           ) where
 
-import           Codec.Archive.Zip ( addFilesToArchive
-                                   , emptyArchive
-                                   , fromArchive
-                                   , ZipOption(..)
-                                   )
-import           Control.Exception.Safe (catch, throwM, MonadThrow)
-import           Control.Monad (when, void, foldM)
-import           Control.Monad.IO.Class (MonadIO(..))
-import           Control.Monad.Trans.Resource (register, MonadResource(..))
+import           Codec.Archive.Zip (ZipOption(..), addFilesToArchive, emptyArchive, fromArchive)
+import           Control.Exception.Safe (MonadThrow, catch, throwM)
 import           Control.Lens ((&), (.~))
+import           Control.Monad (foldM, void, when)
+import           Control.Monad.IO.Class (MonadIO(..))
+import           Control.Monad.Trans.Resource (MonadResource(..), register)
 import qualified Data.ByteString.Lazy as BS
+import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Lazy as HashMap
 import           Data.List (stripPrefix)
 import           Data.Maybe (fromMaybe)
-import           Data.Monoid ((<>))
-import           Data.Text (pack, unpack, Text)
-import           Data.Foldable (traverse_)
+import           Data.Text (Text, pack, unpack)
 import           Data.Tuple.Extra ((***))
 import           System.Directory (removeFile)
-import           System.FilePath ( takeFileName
-                                 , takeDirectory
-                                 , dropTrailingPathSeparator
-                                 , addTrailingPathSeparator
-                                 )
+import           System.FilePath
+                  (addTrailingPathSeparator, dropTrailingPathSeparator, takeDirectory,
+                  takeFileName)
 import           System.IO.Error (isDoesNotExistError)
 
-import           Logging (logEvaporate, logZip)
-import           StackParameters (paths, BucketFiles(..))
-import           Types (PathType(..))
 import           FileSystem (checkPath, getFilesFromFolder)
+import           Logging (logEvaporate, logZip)
+import           StackParameters (BucketFiles(..), paths)
+import           Types (PathType(..))
 
 inlineZips :: BucketFiles -> BucketFiles
 inlineZips bucketFiles@BucketFiles{..} =
@@ -59,7 +52,7 @@ deleteFileIfExists filepath =
       | isDoesNotExistError e = return ()
       | otherwise             = throwM e
 
-writeZips :: (MonadIO m, MonadResource m) => BucketFiles -> m ()
+writeZips :: (MonadIO m, MonadResource m, MonadThrow m) => BucketFiles -> m ()
 writeZips BucketFiles{..} =
   when _isZipped $ do
     let filesList = HashMap.keys _paths

@@ -1,76 +1,51 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Evaporate where
 
-import           Control.Exception.Safe ( throwM
-                                        , handle
-                                        , SomeException
-                                        , MonadThrow
-                                        , Exception(..)
-                                        )
-import           Control.Lens ((&), (<&>), (.~), (<>~), (^.), (%~), view)
+import           Control.Exception.Safe (Exception(..), MonadThrow, SomeException, handle, throwM)
+import           Control.Lens (view, (%~), (&), (.~), (<&>), (<>~), (^.))
 import           Control.Monad (void, when)
 import           Control.Monad.IO.Class (MonadIO(..))
-import           Control.Monad.Reader (asks, local, runReaderT, MonadReader)
-import           Control.Monad.Trans.AWS ( runResourceT
-                                         , runAWST
-                                         , AWSConstraint
-                                         , Credentials(Discover)
-                                         )
-import           Control.Monad.Trans.Resource (MonadBaseControl, MonadResource, liftResourceT)
+import           Control.Monad.IO.Unlift (MonadUnliftIO)
+import           Control.Monad.Reader (MonadReader, asks, local, runReaderT)
+import           Control.Monad.Trans.AWS
+                  (AWSConstraint, Credentials(Discover), runAWST, runResourceT)
+import           Control.Monad.Trans.Resource (MonadResource, liftResourceT)
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
-import           Data.Text (pack, Text)
+import           Data.Text (Text, pack)
 import qualified Data.Text as Text
 import           Data.Tuple.Extra (both)
-import           Network.AWS (newEnv, envLogger, envRegion, Env)
+import           Network.AWS (Env, envLogger, envRegion, newEnv)
 import           Network.AWS.CloudFormation (Parameter, Tag)
 import qualified Network.AWS.CloudFormation.Types as CFN
 import           Network.AWS.Types (LogLevel(..), Region)
 import           Network.AWS.Waiter (Accept(..))
 import           System.Environment (getEnvironment)
 import           System.IO (stdout)
-import           System.Log.Logger (setLevel, updateGlobalLogger, Priority(..))
+import           System.Log.Logger (Priority(..), setLevel, updateGlobalLogger)
 import           Text.Nicify (nicify)
 
 import           Configuration (Command(..), Options(..))
-import           ExternalValues ( inlineBucketNames
-                                , loadParameterValues
-                                , getStackOutputValues
-                                , cStackOutputs
-                                , cFileHashes
-                                , cEnv
-                                , Context(..)
-                                )
-import           Logging ( logMain
-                         , logExecution
-                         , logEvaporate
-                         , logStackOutputs
-                         , customLogger
-                         , LogParameters(..)
-                         )
+import           ExternalValues
+                  (Context(..), cEnv, cFileHashes, cStackOutputs, getStackOutputValues,
+                  inlineBucketNames, loadParameterValues)
 import           Hash (hashBucketFiles, inlineHashes)
+import           Logging
+                  (LogParameters(..), customLogger, logEvaporate, logExecution, logMain,
+                  logStackOutputs)
 import qualified S3
 import qualified Stack
-import           StackDependency ( determineStackOrdering
-                                 , makeStackDependencyGraph
-                                 )
-import           StackParameters ( getStackParameters
-                                 , getParameters
-                                 , convertToStackParameters
-                                 , convertToTags
-                                 , Capabilities(..)
-                                 , BucketFiles
-                                 , StackDescription(..)
-                                 )
+import           StackDependency (determineStackOrdering, makeStackDependencyGraph)
+import           StackParameters
+                  (BucketFiles, Capabilities(..), StackDescription(..), convertToStackParameters,
+                  convertToTags, getParameters, getStackParameters)
 import           STS (getAccountID)
-import           Types ( StackOutputs
-                       , AWSAccountID
-                       , StackOutputLoadFailed(..)
-                       , EvaporateException(..)
-                       , StackName(..)
-                       )
+import           Types
+                  (AWSAccountID, EvaporateException(..), StackName(..), StackOutputLoadFailed(..),
+                  StackOutputs)
 import           Zip (inlineZips, writeZips)
 
 exceptionHandler :: (MonadIO m, MonadThrow m)
@@ -103,7 +78,7 @@ execute Options{..} = do
     else
       void $ processStacks context command awsAccountID orderedStackDescriptions stackNameOption
 
-processStacks :: (MonadResource m, MonadBaseControl IO m, MonadThrow m)
+processStacks :: (MonadResource m, MonadThrow m, MonadUnliftIO m)
               => Context
               -> Command
               -> AWSAccountID
@@ -118,8 +93,8 @@ processStacks context comm accountID stackDescriptions stackNameOption =
 
     processEachStack ::
       ( MonadResource m
-      , MonadBaseControl IO m
       , MonadThrow m
+      , MonadUnliftIO m
       , MonadReader Context m)
       => [StackDescription]
       -> m StackOutputs

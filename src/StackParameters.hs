@@ -1,96 +1,67 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module StackParameters where
 
-import           Control.Exception.Safe (throwM, MonadThrow)
 import           Control.Applicative ((<|>))
+import           Control.Exception.Safe (MonadThrow, throwM)
 import           Control.Lens ((&), (?~))
 import           Control.Lens.TH (makeLenses)
 import           Control.Monad ((>=>))
 import           Control.Monad.IO.Class (MonadIO(..))
-import           Data.Aeson ( withObject
-                            , withText
-                            , withArray
-                            , (.:)
-                            , (.:?)
-                            , (.!=)
-                            , Value(..)
-                            , FromJSON(..)
-                            )
+import           Data.Aeson
+                  (FromJSON(..), Value(..), withArray, withObject, withText, (.!=), (.:), (.:?))
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
-import           Data.Monoid ((<>))
-import           Data.Text (unpack, Text, pack)
+import           Data.Text (Text, pack, unpack)
 import           Data.Tuple.Extra (dupe)
 import           Data.Vector (toList)
 import qualified Data.Yaml as Y
-import           Network.AWS.Types (Region)
+import           Network.AWS.CloudFormation
+                  (Capability, Parameter, Tag, pParameterKey, pParameterValue, parameter, tag)
 import           Network.AWS.Data.Text (fromText)
-import           Network.AWS.CloudFormation ( parameter
-                                            , pParameterKey
-                                            , pParameterValue
-                                            , tag
-                                            , tagKey
-                                            , tagValue
-                                            , Capability
-                                            , Parameter
-                                            , Tag
-                                            )
 import           Network.AWS.S3.Types (BucketName(..))
+import           Network.AWS.Types (Region)
 import           Text.Parser.Token (braces)
-import           Text.Trifecta ( parseString
-                               , eof
-                               , char
-                               , some
-                               , satisfy
-                               , text
-                               , (<?>)
-                               , Parser
-                               , Result(..)
-                               )
+import           Text.Trifecta
+                  (Parser, Result(..), char, eof, parseString, satisfy, some, text, (<?>))
 
-import           Types ( Paths
-                       , AWSAccountID
-                       , Tags
-                       , StackName(..)
-                       , StackOutputName(..)
-                       , LoadedParameters
-                       , EnvironmentNotFound(..)
-                       )
+import           Types
+                  (AWSAccountID, EnvironmentNotFound(..), LoadedParameters, Paths, StackName(..),
+                  StackOutputName(..), Tags)
 
 type Environments = HashMap AWSAccountID Parameters
 type Parameters   = HashMap Text ParameterValue
 
-data ParameterValue =
-    SimpleValue Text
-  | EnvVarName Text
-  | HashFilePath Text
-  | StackOutput StackOutputName
-  deriving (Show, Eq)
+data ParameterValue = SimpleValue Text
+    | EnvVarName Text
+    | HashFilePath Text
+    | StackOutput StackOutputName
+    deriving (Show, Eq)
 
-data BucketFiles = BucketFiles {
-    _bucketName :: BucketName
-  , _isHashed   :: Bool
-  , _isZipped   :: Bool
-  , _paths      :: Paths
-  } deriving (Show, Eq)
+data BucketFiles = BucketFiles
+    { _bucketName :: BucketName
+    , _isHashed   :: Bool
+    , _isZipped   :: Bool
+    , _paths      :: Paths
+    }
+    deriving (Show, Eq)
 
 newtype Capabilities = Capabilities { getCapabilities :: [Capability] }
-  deriving (Show, Eq, Monoid)
+  deriving (Show, Eq, Semigroup, Monoid)
 
-data StackDescription = StackDescription {
-    _capabilities :: Capabilities
-  , _stackName    :: StackName
-  , _s3upload     :: [BucketFiles]
-  , _templatePath :: Text
-  , _tags         :: Tags
-  , _parameters   :: Environments
-  , _region       :: Maybe Region
-  } deriving (Show, Eq)
+data StackDescription = StackDescription
+    { _capabilities :: Capabilities
+    , _stackName    :: StackName
+    , _s3upload     :: [BucketFiles]
+    , _templatePath :: Text
+    , _tags         :: Tags
+    , _parameters   :: Environments
+    , _region       :: Maybe Region
+    }
+    deriving (Show, Eq)
 
 makeLenses ''BucketFiles
 
@@ -215,6 +186,4 @@ convertToStackParameters = fmap makeParameter . HashMap.toList
 
 convertToTags :: Tags -> [Tag]
 convertToTags = fmap makeTag . HashMap.toList
-  where makeTag (key, value) =
-          tag & tagKey ?~ key
-              & tagValue ?~ value
+  where makeTag (key, value) = tag key value

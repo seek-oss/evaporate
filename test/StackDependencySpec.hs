@@ -1,33 +1,19 @@
 module StackDependencySpec (spec, main) where
 
-import Control.Monad.Catch (MonadThrow)
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Reader (runReaderT)
-import Network.AWS.S3.Types (BucketName(..))
-import Test.Hspec ( describe
-                  , context
-                  , it
-                  , hspec
-                  , Spec
-                  )
-import Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
+import           Control.Monad.Catch (MonadThrow)
+import           Control.Monad.IO.Class (MonadIO(..))
+import           Control.Monad.Reader (runReaderT)
+import           Network.AWS.S3.Types (BucketName(..))
+import           Test.Hspec (Spec, context, describe, hspec, it)
+import           Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
 
-import StackDependency ( makeStackDependencyGraph
-                       , parameterValueToDependency
-                       , getStackOutputBucketName
-                       , determineStackOrdering
-                       , StackDependencyGraph
-                       , StackNodeMap
-                       , StackReference(..)
-                       , DependencyCycleDetected(..)
-                       , UnknownStackReference(..)
-                       )
-import StackParameters ( getStackParameters
-                       , Capabilities(..)
-                       , ParameterValue(..)
-                       , StackDescription(..)
-                       )
-import Types (OutputName(..), StackName(..), StackOutputName(..))
+import           StackDependency
+                  (DependencyCycleDetected(..), StackDependencyGraph, StackNodeMap,
+                  StackReference(..), UnknownStackReference(..), determineStackOrdering,
+                  getStackOutputBucketName, makeStackDependencyGraph, parameterValueToDependency)
+import           StackParameters
+                  (Capabilities(..), ParameterValue(..), StackDescription(..), getStackParameters)
+import           Types (OutputName(..), StackName(..), StackOutputName(..))
 
 main :: IO ()
 main = hspec spec

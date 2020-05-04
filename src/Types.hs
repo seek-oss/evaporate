@@ -5,8 +5,7 @@ module Types where
 import           Control.Exception.Safe (Exception(..))
 import           Data.Hashable (Hashable)
 import           Data.HashMap.Lazy (HashMap)
-import           Data.Monoid ((<>))
-import           Data.Text (unpack, Text)
+import           Data.Text (Text, unpack)
 import           Data.Typeable (Typeable)
 import           GHC.Generics (Generic)
 

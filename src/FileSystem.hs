@@ -5,19 +5,15 @@ module FileSystem
   , sourceFileOrDirectory
   ) where
 
-import Conduit (runConduitRes
-              , sourceDirectoryDeep
-              , sinkList
-              , Producer
-              , yield)
-import Control.Exception.Safe (throwM)
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Trans.Resource (MonadResource)
-import Data.Conduit ((.|))
-import Data.Text (pack)
-import System.Directory (doesDirectoryExist, doesFileExist)
+import           Conduit (ConduitT, runConduitRes, sinkList, sourceDirectoryDeep, yield)
+import           Control.Exception.Safe (throwM)
+import           Control.Monad.IO.Class (MonadIO(..))
+import           Control.Monad.Trans.Resource (MonadResource)
+import           Data.Conduit ((.|))
+import           Data.Text (pack)
+import           System.Directory (doesDirectoryExist, doesFileExist)
 
-import Types (PathType(..), FileOrFolderDoesNotExist(..))
+import           Types (FileOrFolderDoesNotExist(..), PathType(..))
 
 getFilesFromFolder :: FilePath -> IO [FilePath]
 getFilesFromFolder folderPath = runConduitRes $
@@ -36,7 +32,7 @@ checkPath path = liftIO $ do
 -- | Deeply stream the contents of the given directory.
 -- This works the same as sourceDirectoryDeep, except if the path is a File not a Directory then
 -- it will yield just that file.
-sourceFileOrDirectory :: MonadResource m => Bool -> FilePath -> Producer m FilePath
+sourceFileOrDirectory :: MonadResource m => Bool -> FilePath -> ConduitT i FilePath m ()
 sourceFileOrDirectory followSymlinks path = do
   fileType <- checkPath path
   case fileType of
