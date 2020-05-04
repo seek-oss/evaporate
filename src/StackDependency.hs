@@ -1,44 +1,31 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module StackDependency where
 
-import           Control.Exception.Safe (throwM, Exception(..), MonadThrow)
+import           Control.Exception.Safe (Exception(..), MonadThrow, throwM)
 import           Control.Monad.Reader (runReaderT)
 import           Control.Monad.Reader.Class (MonadReader(..))
 import           Data.Function ((&))
-import           Data.Graph.Inductive.Graph ( empty
-                                            , mkGraph
-                                            , lab
-                                            , LNode
-                                            , LEdge
-                                            , Graph(..)
-                                            )
+import           Data.Graph.Inductive.Graph (Graph(..), LEdge, LNode, empty, lab, mkGraph)
 import qualified Data.Graph.Inductive.PatriciaTree as G
-import           Data.Graph.Inductive.Query.DFS (topsort', scc)
+import           Data.Graph.Inductive.Query.DFS (scc, topsort')
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (mapMaybe, catMaybes)
-import           Data.Monoid ((<>))
-import qualified Data.Set as Set
+import           Data.Maybe (catMaybes, mapMaybe)
 import           Data.Set (Set)
+import qualified Data.Set as Set
+import           Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
-import           Data.Text (pack, unpack, Text)
-import           Data.Tuple.Extra (first, dupe)
+import           Data.Tuple.Extra (dupe, first)
 import           Network.AWS.Data.Text (ToText(..))
 import           Network.AWS.S3.Types (BucketName(..))
-import           Text.Trifecta (parseString, Result(..))
+import           Text.Trifecta (Result(..), parseString)
 
-import           StackParameters ( parameterValue
-                                 , getParameters
-                                 , BucketFiles(..)
-                                 , ParameterValue(..)
-                                 , StackDescription(..)
-                                 )
-import           Types ( AWSAccountID
-                       , OutputName(..)
-                       , StackName(..)
-                       , StackOutputName(..))
+import           StackParameters
+                  (BucketFiles(..), ParameterValue(..), StackDescription(..), getParameters,
+                  parameterValue)
+import           Types (AWSAccountID, OutputName(..), StackName(..), StackOutputName(..))
 
 -- An edge from stack1 to stack2 implies that stack1 must exist before stack2
 -- can be created, i.e. stack2 is dependent on stack1

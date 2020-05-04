@@ -1,4 +1,4 @@
-import Test.Hspec
+import           Test.Hspec
 
 import qualified ExternalValuesSpec
 import qualified HashSpec

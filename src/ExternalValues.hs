@@ -3,52 +3,39 @@
 
 module ExternalValues where
 
-import           Control.Exception.Safe (throwM, Exception(..), MonadThrow)
-import           Control.Lens ((&), (^.), view, each, mapMOf, iso, Iso')
+import           Control.Exception.Safe (Exception(..), MonadThrow, throwM)
+import           Control.Lens (Iso', each, iso, mapMOf, view, (&), (^.))
 import           Control.Lens.TH (makeLenses)
 import           Control.Monad.Reader (asks)
 import           Control.Monad.Reader.Class (MonadReader)
 import           Control.Monad.Trans.AWS (AWSConstraint, Env, HasEnv(..))
 import           Data.Hashable (Hashable)
-import qualified Data.HashMap.Lazy as HashMap
 import           Data.HashMap.Lazy (HashMap)
+import qualified Data.HashMap.Lazy as HashMap
 import           Data.Maybe (mapMaybe)
-import           Data.Monoid ((<>))
-import           Data.Text (unpack, Text)
+import           Data.Text (Text, unpack)
 import           Data.Typeable (Typeable)
-import           Network.AWS.CloudFormation ( sOutputs
-                                            , oOutputKey
-                                            , oOutputValue
-                                            , Output
-                                            )
+import           Network.AWS.CloudFormation (Output, oOutputKey, oOutputValue, sOutputs)
 import           Network.AWS.CloudFormation.Types (OnFailure)
 import           Network.AWS.S3.Types (BucketName(..))
-import           Text.Trifecta (parseString, Result(..))
+import           Text.Trifecta (Result(..), parseString)
 
 import qualified Stack
-import           StackParameters ( bucketName
-                                 , parameterValue
-                                 , Parameters
-                                 , ParameterValue(..)
-                                 , BucketFiles(..)
-                                 )
-import           Types ( StackOutputs
-                       , FileHashes
-                       , LoadedParameters
-                       , StackName(..)
-                       , StackOutputName(..)
-                       , HashNotFound(..)
-                       )
+import           StackParameters
+                  (BucketFiles(..), ParameterValue(..), Parameters, bucketName, parameterValue)
+import           Types
+                  (FileHashes, HashNotFound(..), LoadedParameters, StackName(..),
+                  StackOutputName(..), StackOutputs)
 
 type ExternalValues    = HashMap Text Text
 type SystemEnvironment = HashMap Text Text
 
 data Context = Context {
-    _cEnvironment         :: SystemEnvironment
-  , _cStackOutputs        :: StackOutputs
-  , _cOnCreateFailure     :: OnFailure
-  , _cFileHashes          :: FileHashes
-  , _cEnv                 :: Env
+    _cEnvironment     :: SystemEnvironment
+  , _cStackOutputs    :: StackOutputs
+  , _cOnCreateFailure :: OnFailure
+  , _cFileHashes      :: FileHashes
+  , _cEnv             :: Env
   }
 
 makeLenses ''Context
@@ -107,7 +94,7 @@ inlineBucketNames =
       Success (EnvVarName _) -> throwM $ InvalidBucketName t
       Success (HashFilePath _) -> throwM $ InvalidBucketName t
       Success (SimpleValue _) -> return t
-      Failure _ -> fail . unpack $ t <> " is not a valid value"
+      Failure _ -> throwM $ InvalidBucketName $ t <> " is not a valid value"
 
 rawBucketName :: Iso' BucketName Text
 rawBucketName = iso (\(BucketName text) -> text) BucketName
@@ -120,10 +107,10 @@ loadParameterValues :: (MonadReader Context m, MonadThrow m)
 loadParameterValues = traverse loadPV
 
 loadPV :: (MonadReader Context m, MonadThrow m) => ParameterValue -> m Text
-loadPV (SimpleValue s) = pure s
-loadPV (EnvVarName e) =  asks _cEnvironment >>= lookupOrThrow e EnvironmentValueNotFound
+loadPV (SimpleValue s)  = pure s
+loadPV (EnvVarName e)   =  asks _cEnvironment >>= lookupOrThrow e EnvironmentValueNotFound
 loadPV (HashFilePath h) = asks _cFileHashes >>= lookupOrThrow h HashNotFound
-loadPV (StackOutput s) = asks _cStackOutputs >>= lookupOrThrow s StackOutputNotFound
+loadPV (StackOutput s)  = asks _cStackOutputs >>= lookupOrThrow s StackOutputNotFound
 
 lookupOrThrow :: (Hashable k, Eq k, Exception e, MonadThrow m)
               => k

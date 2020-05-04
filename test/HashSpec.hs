@@ -1,15 +1,11 @@
 module HashSpec (spec, main) where
 
-import Network.AWS.S3.Types (BucketName(..))
-import Test.Hspec (describe, context, it, hspec, Spec)
-import Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
+import           Network.AWS.S3.Types (BucketName(..))
+import           Test.Hspec (Spec, context, describe, hspec, it)
+import           Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
 
-import Hash ( inlineHashes
-            , createHash
-            , HashNotFound(..)
-            , FileOrFolderDoesNotExist(..)
-            )
-import StackParameters (BucketFiles(..))
+import           Hash (FileOrFolderDoesNotExist(..), HashNotFound(..), createHash, inlineHashes)
+import           StackParameters (BucketFiles(..))
 
 main :: IO ()
 main = hspec spec

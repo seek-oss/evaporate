@@ -1,9 +1,9 @@
 module S3Spec where
 
-import Test.Hspec (describe, context, it, hspec, Spec)
-import Test.Hspec.Expectations.Pretty (shouldBe)
+import           Test.Hspec (Spec, context, describe, hspec, it)
+import           Test.Hspec.Expectations.Pretty (shouldBe)
 
-import S3 (makeS3FilePath)
+import           S3 (makeS3FilePath)
 
 main :: IO ()
 main = hspec spec

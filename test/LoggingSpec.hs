@@ -1,34 +1,17 @@
 module LoggingSpec (spec, main) where
 
-import Control.Monad.Except (runExceptT)
-import Data.Either.Combinators (fromRight')
-import Data.Monoid ((<>))
-import Network.AWS.S3.Types (BucketName(..))
-import Network.AWS.Types (Region(..))
-import Test.Hspec ( describe
-                  , context
-                  , shouldBe
-                  , shouldSatisfy
-                  , it
-                  , hspec
-                  , Spec
-                  )
+import           Control.Monad.Except (runExceptT)
+import           Data.Either.Combinators (fromRight')
+import           Network.AWS.S3.Types (BucketName(..))
+import           Network.AWS.Types (Region(..))
+import           Test.Hspec (Spec, context, describe, hspec, it, shouldBe, shouldSatisfy)
 
-import Configuration (Command(..))
-import Logging ( logMain
-               , logGeneral
-               , logStackName
-               , logExecution
-               , logStackOutputs
-               , logFileUpload
-               , logZip
-               , filterBuilderBy
-               , LogParameters(..)
-               )
-import StackParameters (getStackParameters, StackDescription(..))
-import Types ( StackName(..)
-             , StackOutputName(..)
-             )
+import           Configuration (Command(..))
+import           Logging
+                  (LogParameters(..), filterBuilderBy, logExecution, logFileUpload, logGeneral,
+                  logMain, logStackName, logStackOutputs, logZip)
+import           StackParameters (StackDescription(..), getStackParameters)
+import           Types (StackName(..), StackOutputName(..))
 
 main :: IO ()
 main = hspec spec
@@ -39,21 +22,21 @@ spec = describe "LoggingSpec" $ do
     it "can generate a main log message" $ do
       stackParams <- runExceptT . getStackParameters $ "test/valid.yaml"
       let descriptions = fromRight' stackParams
-      let accountID = "478156153062"
+      let accountID = "478156153XXX"
       let logParams = LogParameters Create descriptions accountID Sydney
       let logMessage = logMain logParams
       logMessage `shouldBe`
            "\nCommand being executed: "
         <> "Create"
         <> "\nAWS Account ID: "
-        <> "478156153062"
+        <> "478156153XXX"
         <> "\nRegion: ap-southeast-2"
         <> "\nStack(s) being operated on:"
         <> "\n    Stack1"
         <> "\n    Stack2"
 
     it "can generate a general log message" $ do
-      let accountID = "478156153062"
+      let accountID = "478156153XXX"
       let logMessage = logGeneral Create accountID Sydney
       logMessage `shouldBe`
            "\nCommand being executed: "

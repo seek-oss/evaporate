@@ -1,15 +1,15 @@
 module ZipSpec (spec, main) where
 
-import Control.Monad.Trans.Resource (runResourceT)
-import Data.Text (pack)
-import Network.AWS.S3.Types (BucketName(..))
-import System.FilePath ( (</>) )
-import Test.Hspec (describe , context , it , hspec , Spec)
-import Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
+import           Control.Monad.Trans.Resource (runResourceT)
+import           Data.Text (pack)
+import           Network.AWS.S3.Types (BucketName(..))
+import           System.FilePath ((</>))
+import           Test.Hspec (Spec, context, describe, hspec, it)
+import           Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
 
-import StackParameters (BucketFiles(..))
-import Types (FileOrFolderDoesNotExist(..))
-import Zip (inlineZips, writeZip, getPathInArchive)
+import           StackParameters (BucketFiles(..))
+import           Types (FileOrFolderDoesNotExist(..))
+import           Zip (getPathInArchive, inlineZips, writeZip)
 
 main :: IO ()
 main = hspec spec

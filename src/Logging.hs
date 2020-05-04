@@ -3,24 +3,19 @@ module Logging where
 import           Control.Lens.Indexed (ifoldMap)
 import           Control.Monad (when)
 import           Control.Monad.IO.Class (MonadIO(..))
-import           Data.ByteString.Builder (hPutBuilder, toLazyByteString, Builder)
+import           Data.ByteString.Builder (Builder, hPutBuilder, toLazyByteString)
 import qualified Data.ByteString.Lazy.Char8 as BS
-import           Data.Monoid ((<>))
-import           Data.Text (Text, unpack, pack)
+import           Data.Text (Text, pack, unpack)
 import           Data.Text.Encoding (encodeUtf8)
 import           Network.AWS.Data.Text (toText)
 import           Network.AWS.S3.Types (BucketName(..))
-import           Network.AWS.Types (Logger, Region, LogLevel(..))
+import           Network.AWS.Types (LogLevel(..), Logger, Region)
+import           System.IO (BufferMode(..), Handle, hSetBinaryMode, hSetBuffering)
 import           System.Log.Logger (infoM)
-import           System.IO (hSetBinaryMode, hSetBuffering, Handle, BufferMode(..))
 
 import           Configuration (Command(..))
 import           StackParameters (StackDescription(..))
-import           Types ( AWSAccountID
-                       , StackOutputs
-                       , StackName(..)
-                       , StackOutputName(..)
-                       )
+import           Types (AWSAccountID, StackName(..), StackOutputName(..), StackOutputs)
 
 type Filters = [Text]
 

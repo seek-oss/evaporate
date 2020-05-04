@@ -1,50 +1,25 @@
 module StackParametersSpec (spec, main) where
 
-import Control.Lens ((&), (?~))
-import Control.Lens.Extras (is)
-import Control.Monad.Except (runExceptT)
-import Data.Either.Combinators (fromRight')
-import Data.Text (Text)
-import Data.Yaml (ParseException)
-import Network.AWS (Region(Sydney))
-import Network.AWS.CloudFormation ( parameter
-                                  , pParameterKey
-                                  , pParameterValue
-                                  , tag
-                                  , tagKey
-                                  , tagValue
-                                  , Capability(..)
-                                  )
-import Network.AWS.S3.Types (BucketName(..))
-import Test.Hspec ( describe
-                  , context
-                  , it
-                  , hspec
-                  , Selector
-                  , Spec
-                  )
-import Test.Hspec.Expectations.Pretty ( shouldBe
-                                      , shouldThrow
-                                      , shouldSatisfy
-                                      , shouldReturn
-                                      )
-import Text.Trifecta (parseString, _Failure, Result(..))
+import           Control.Lens ((&), (?~))
+import           Control.Lens.Extras (is)
+import           Control.Monad.Except (runExceptT)
+import           Data.Either.Combinators (fromRight')
+import           Data.Text (Text)
+import           Data.Yaml (ParseException)
+import           Network.AWS (Region(Sydney))
+import           Network.AWS.CloudFormation
+                  (Capability(..), pParameterKey, pParameterValue, parameter, tag)
+import           Network.AWS.S3.Types (BucketName(..))
+import           Test.Hspec (Selector, Spec, context, describe, hspec, it)
+import           Test.Hspec.Expectations.Pretty (shouldBe, shouldReturn, shouldSatisfy, shouldThrow)
+import           Text.Trifecta (Result(..), parseString, _Failure)
 
-import StackParameters ( getStackParameters
-                       , withinCurlyBracePair
-                       , envVarName
-                       , hashFilePath
-                       , stackOutputName
-                       , innerText
-                       , convertToStackParameters
-                       , convertToTags
-                       , getParameters
-                       , BucketFiles(..)
-                       , StackDescription(..)
-                       , ParameterValue(..)
-                       , Capabilities(..)
-                       )
-import Types (EnvironmentNotFound(..), StackName(..), StackOutputName(..))
+import           StackParameters
+                  (BucketFiles(..), Capabilities(..), ParameterValue(..), StackDescription(..),
+                  convertToStackParameters, convertToTags, envVarName, getParameters,
+                  getStackParameters, hashFilePath, innerText, stackOutputName,
+                  withinCurlyBracePair)
+import           Types (EnvironmentNotFound(..), StackName(..), StackOutputName(..))
 
 main :: IO ()
 main = hspec spec
@@ -64,10 +39,8 @@ spec = describe "StackParametersSpec" $ do
 
   context "loading tags" $
     it "can convert from Tags to AWS Tag" $
-      convertToTags [("tag1", "value1"), ("tag2", "value2")] `shouldBe` [
-          (tag & tagKey ?~ "tag1" & tagValue ?~ "value1")
-        , (tag & tagKey ?~ "tag2" & tagValue ?~ "value2")
-      ]
+      convertToTags [("tag1", "value1"), ("tag2", "value2")] `shouldBe`
+        [ tag "tag1" "value1" , tag "tag2" "value2" ]
 
   context "getting environment" $ do
     it "can get list of Parameters from Environments and an AWSAccount" $
@@ -267,7 +240,7 @@ spec = describe "StackParametersSpec" $ do
 
 shouldParse :: (Eq a, Show a) => Result a -> a -> IO ()
 shouldParse (Success a) expected = a `shouldBe` expected
-shouldParse (Failure err) _ = fail . show $ err
+shouldParse (Failure err) _      = fail . show $ err
 
 shouldFailParsing :: Show a => Result a -> IO ()
 shouldFailParsing result = result `shouldSatisfy` is _Failure

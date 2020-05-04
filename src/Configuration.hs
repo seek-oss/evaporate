@@ -1,33 +1,14 @@
 module Configuration where
 
-import           Data.Monoid ((<>))
-import           Data.Version (showVersion)
 import           Data.Text (Text, pack, unpack)
+import           Data.Version (showVersion)
+import qualified Network.AWS.CloudFormation.Types as CFN
 import           Network.AWS.Data.Text (fromText)
 import           Network.AWS.Types (LogLevel(..), Region)
-import qualified Network.AWS.CloudFormation.Types as CFN
-import           Options.Applicative ( info
-                                     , helper
-                                     , progDesc
-                                     , long
-                                     , short
-                                     , help
-                                     , metavar
-                                     , strArgument
-                                     , showDefault
-                                     , subparser
-                                     , execParser
-                                     , flag
-                                     , value
-                                     , optional
-                                     , infoOption
-                                     , hidden
-                                     , str
-                                     , eitherReader
-                                     , Parser
-                                     , ReadM
-                                     , ParserInfo(..)
-                                     )
+import           Options.Applicative
+                  (Parser, ParserInfo(..), ReadM, eitherReader, execParser, flag, help, helper,
+                  hidden, info, infoOption, long, metavar, optional, progDesc, short, showDefault,
+                  str, strArgument, subparser, value)
 import qualified Options.Applicative.Builder as OB
 
 import qualified Paths_evaporate as PackageInfo

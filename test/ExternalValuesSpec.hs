@@ -1,30 +1,21 @@
 module ExternalValuesSpec (main, spec) where
 
-import Control.Lens ((&), (?~))
-import Control.Monad.Reader (runReaderT)
-import Control.Monad.Trans.AWS (newEnv, Credentials(..))
-import Network.AWS.CloudFormation ( output
-                                  , oOutputKey
-                                  , oOutputValue
-                                  )
-import Network.AWS.Auth (AccessKey(..), SecretKey(..))
-import Network.AWS.CloudFormation.Types (OnFailure(..))
-import Network.AWS.S3.Types (BucketName(..))
-import Test.Hspec (describe, context, it, hspec, Spec)
-import Test.Hspec.Expectations.Pretty ( shouldBe
-                                      , shouldThrow
-                                      )
+import           Control.Lens ((&), (?~))
+import           Control.Monad.Reader (runReaderT)
+import           Control.Monad.Trans.AWS (Credentials(..), newEnv)
+import           Network.AWS.Auth (AccessKey(..), SecretKey(..))
+import           Network.AWS.CloudFormation (oOutputKey, oOutputValue, output)
+import           Network.AWS.CloudFormation.Types (OnFailure(..))
+import           Network.AWS.S3.Types (BucketName(..))
+import           Test.Hspec (Spec, context, describe, hspec, it)
+import           Test.Hspec.Expectations.Pretty (shouldBe, shouldThrow)
 
-import ExternalValues ( mapStackOutputsToExternalValues
-                      , inlineBucketNames
-                      , loadPV
-                      , Context(..)
-                      , EnvironmentValueNotFound(..)
-                      , StackOutputNotFound(..)
-                      , InvalidBucketName(..)
-                      )
-import StackParameters (BucketFiles(..), ParameterValue(..))
-import Types (StackOutputName(..), StackName(..), HashNotFound(..))
+import           ExternalValues
+                  (Context(..), EnvironmentValueNotFound(..), InvalidBucketName(..),
+                  StackOutputNotFound(..), inlineBucketNames, loadPV,
+                  mapStackOutputsToExternalValues)
+import           StackParameters (BucketFiles(..), ParameterValue(..))
+import           Types (HashNotFound(..), StackName(..), StackOutputName(..))
 
 main :: IO ()
 main = hspec spec

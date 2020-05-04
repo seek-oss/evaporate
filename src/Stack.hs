@@ -1,32 +1,24 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Stack where
 
 import           Control.Applicative (Alternative, empty)
 import           Control.Error.Util (hush)
-import           Control.Exception.Safe (throwM, MonadThrow, Exception(..))
-import           Control.Lens ((&), (.~), (?~), (^.), filtered, Traversal')
+import           Control.Exception.Safe (Exception(..), MonadThrow, throwM)
+import           Control.Lens (Traversal', filtered, (&), (.~), (?~), (^.))
 import           Control.Monad (void)
-import           Control.Monad.Trans.AWS (send, await, AWSConstraint)
+import           Control.Monad.Trans.AWS (AWSConstraint, await, send)
 import           Control.Monad.Trans.Maybe (MaybeT(..))
-import           Data.Monoid ((<>))
-import           Data.Text (unpack, Text)
+import           Data.Text (Text, unpack)
 import qualified Data.Text as Text
 import           Data.Typeable (Typeable)
-import           Network.AWS (trying, catching)
+import           Network.AWS (catching, trying)
 import qualified Network.AWS.CloudFormation as CF
 import qualified Network.AWS.CloudFormation.Types as CFN
-import           Network.AWS.Types ( serviceCode
-                                   , serviceMessage
-                                   , AsError
-                                   , AWSRequest
-                                   , AsError(..)
-                                   , ServiceError(..)
-                                   , ErrorMessage(..)
-                                   , ErrorCode(..)
-                                   , Error(ServiceError)
-                                   )
+import           Network.AWS.Types
+                  (AWSRequest, AsError(..), Error(ServiceError), ErrorCode(..), ErrorMessage(..),
+                  ServiceError(..), serviceCode, serviceMessage)
 import           Network.AWS.Waiter (Accept(..), Wait(..))
 import           Network.HTTP.Types.Status (statusCode)
 
